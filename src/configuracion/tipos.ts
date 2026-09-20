@@ -17,4 +17,8 @@ export interface CategoriaPanel {
 export interface RespuestaConfigSchema {
   jsonSchema: Record<string, unknown>;
   categorias: CategoriaPanel[];
+  // el valor que usa la aplicacion en los campos que el schema deja
+  // opcionales a proposito (los widgets del panel principal), con la
+  // ruta completa como clave: "panel.totalScansCard.width"
+  valoresDeReferencia?: Record<string, unknown>;
 }

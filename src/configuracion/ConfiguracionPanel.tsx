@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import type { CategoriaPanel, ModuloPanel, RespuestaConfigSchema } from "./tipos";
 import { extraerSchemaModulo } from "./extraerSchemaModulo";
+import { PlantillaCampo, PlantillaObjeto, type ContextoConfig } from "./PlantillaCampo";
+import { construirUiSchema } from "./construirUiSchema";
 
 const URL_BASE = "http://localhost:3000";
 
@@ -39,6 +41,36 @@ function leerValorEnRuta(configuracion: Record<string, unknown>, modulo: ModuloP
   return valorFiltrado;
 }
 
+// cuenta cuantos campos del modulo tiene guardados este cliente, y
+// cuantos hay en total -- sirve para decir de un vistazo cuanto de este
+// apartado esta personalizado y cuanto viene tal cual del valor original
+function contarCampos(
+  esquemaModulo: Record<string, unknown>,
+  guardado: Record<string, unknown>
+): { total: number; guardados: number } {
+  let total = 0;
+  let guardados = 0;
+
+  function recorrer(nodo: Record<string, unknown>, valor: unknown) {
+    const propiedades = nodo.properties as Record<string, unknown> | undefined;
+    if (propiedades) {
+      for (const [clave, subNodo] of Object.entries(propiedades)) {
+        const subValor =
+          valor !== null && typeof valor === "object"
+            ? (valor as Record<string, unknown>)[clave]
+            : undefined;
+        recorrer(subNodo as Record<string, unknown>, subValor);
+      }
+      return;
+    }
+    total++;
+    if (valor !== undefined) guardados++;
+  }
+
+  recorrer(esquemaModulo, guardado);
+  return { total, guardados };
+}
+
 // coloca un valor nuevo en el punto exacto que indica una ruta, dentro
 // de una copia de la configuracion (nunca modifica el objeto original),
 // combinandolo con lo que ya hubiera en ese punto -- imprescindible
@@ -70,6 +102,7 @@ function establecerValorEnRuta(
 export default function ConfiguracionPanel({ clienteId }: Props) {
   const [categorias, setCategorias] = useState<CategoriaPanel[]>([]);
   const [jsonSchema, setJsonSchema] = useState<Record<string, unknown> | null>(null);
+  const [valoresDeReferencia, setValoresDeReferencia] = useState<Record<string, unknown>>({});
   const [configuracion, setConfiguracion] = useState<Record<string, unknown>>({});
   const [moduloActivo, setModuloActivo] = useState<ModuloPanel | null>(null);
   // valores del formulario mientras se editan, separado de "configuracion"
@@ -95,6 +128,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
 
       setCategorias(datosSchema.categorias);
       setJsonSchema(datosSchema.jsonSchema);
+      setValoresDeReferencia(datosSchema.valoresDeReferencia ?? {});
       setConfiguracion(datosConfig.configuracion ?? {});
       setCargando(false);
     }
@@ -129,6 +163,36 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     setMensaje("guardado correctamente");
   }
 
+  // el schema del modulo activo y su recuento de campos se calculan una
+  // sola vez por modulo, no en cada tecla que se pulse en el formulario
+  const esquemaModulo = useMemo(
+    () => (jsonSchema && moduloActivo ? extraerSchemaModulo(jsonSchema, moduloActivo) : null),
+    [jsonSchema, moduloActivo]
+  );
+
+  const uiSchema = useMemo(() => (esquemaModulo ? construirUiSchema(esquemaModulo) : {}), [esquemaModulo]);
+
+  const recuento = useMemo(
+    () => (esquemaModulo && moduloActivo ? contarCampos(esquemaModulo, leerValorEnRuta(configuracion, moduloActivo)) : null),
+    [esquemaModulo, moduloActivo, configuracion]
+  );
+
+  // lo que necesitan las plantillas para distinguir un valor que este
+  // cliente guardo de uno que solo se ve porque es el valor original --
+  // se les pasa ya el trozo guardado de este modulo, asi que las rutas de
+  // los campos cuelgan directamente de ahi y rutaModulo va vacia
+  // los valores de referencia vienen con la ruta completa como clave
+  // ("panel.totalScansCard.width"), y las rutas que da el formulario son
+  // relativas al modulo, asi que se le pasa la ruta del modulo para que
+  // pueda reconstruir la clave
+  const contexto: ContextoConfig | undefined = moduloActivo
+    ? {
+        rutaModulo: moduloActivo.rutaSchema,
+        configuracionGuardada: leerValorEnRuta(configuracion, moduloActivo),
+        valoresDeReferencia,
+      }
+    : undefined;
+
   if (cargando) {
     return <p>cargando configuracion...</p>;
   }
@@ -138,28 +202,22 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", gap: "24px" }}>
+    <div className="config-disposicion">
       {/* menu lateral: categorias, cada una con sus modulos debajo */}
-      <nav style={{ minWidth: "260px" }}>
+      <nav className="config-menu">
         {categorias.map((categoria) => (
-          <div key={categoria.id} style={{ marginBottom: "16px" }}>
-            <strong>{categoria.nombre}</strong>
-            <ul style={{ listStyle: "none", paddingLeft: "8px" }}>
+          <div key={categoria.id} className="config-categoria">
+            <p className="config-categoria-nombre">{categoria.nombre}</p>
+            <ul className="config-modulos">
               {categoria.modulos.map((modulo) => (
                 <li key={modulo.id}>
                   <button
                     type="button"
+                    className={`config-modulo ${moduloActivo?.id === modulo.id ? "config-modulo-activo" : ""}`}
                     onClick={() => {
                       setModuloActivo(modulo);
                       setDatosEnEdicion(leerValorEnRuta(configuracion, modulo));
                       setMensaje(null);
-                    }}
-                    style={{
-                      fontWeight: moduloActivo?.id === modulo.id ? "bold" : "normal",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px 0",
                     }}
                   >
                     {modulo.nombre}
@@ -172,12 +230,21 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
       </nav>
 
       {/* formulario del modulo seleccionado */}
-      <div style={{ flex: 1 }}>
-        {!moduloActivo && <p>elige una seccion del menu para empezar</p>}
+      <div className="config-formulario">
+        {!moduloActivo && <p className="config-vacio">elige una seccion del menu para empezar</p>}
 
-        {moduloActivo && (
+        {moduloActivo && esquemaModulo && (
           <div>
-            <h3>{moduloActivo.nombre}</h3>
+            <div className="config-cabecera">
+              <h3 className="config-titulo">{moduloActivo.nombre}</h3>
+              <span className="config-ruta">{moduloActivo.rutaSchema.join(" › ")}</span>
+            </div>
+            {recuento && (
+              <p className="config-recuento">
+                {recuento.total} campos, {recuento.guardados}{" "}
+                {recuento.guardados === 1 ? "lo tiene guardado" : "los tiene guardados"} este cliente
+              </p>
+            )}
             {/* tagName="div": react-admin ya envuelve toda la pestaña en
             su propio <form>, sin esto, react-jsonschema-form pondria
             otro <form> dentro, HTML no permite formularios anidados.
@@ -189,18 +256,27 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
             fuera de este componente) es quien dispara el guardado real */}
             <Form
               tagName="div"
-              schema={extraerSchemaModulo(jsonSchema, moduloActivo)}
+              schema={esquemaModulo}
+              uiSchema={uiSchema}
               validator={validator}
               formData={datosEnEdicion}
               onChange={({ formData }) => setDatosEnEdicion(formData)}
               disabled={guardando}
+              templates={{ FieldTemplate: PlantillaCampo, ObjectFieldTemplate: PlantillaObjeto }}
+              formContext={contexto}
             >
               <div />
             </Form>
-            <button type="button" onClick={guardarModulo} disabled={guardando}>
-              {guardando ? "guardando..." : "guardar cambios"}
-            </button>
-            {mensaje && <p>{mensaje}</p>}
+            <div className="config-acciones">
+              <button type="button" className="config-guardar" onClick={guardarModulo} disabled={guardando}>
+                {guardando ? "guardando..." : "guardar cambios"}
+              </button>
+              {mensaje && (
+                <span className={mensaje.startsWith("error") ? "config-mensaje-error" : "config-mensaje-ok"}>
+                  {mensaje}
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -1,111 +1,325 @@
+/* estilos del panel de administracion
+   antes aqui estaba la hoja de ejemplo que trae vite al crear el
+   proyecto, sin tocar: centraba la aplicacion entera en una columna de
+   1126px con margen automatico a los lados, y ademas ponia todo el texto
+   centrado. de ahi venian el margen enorme de la izquierda y las
+   etiquetas del formulario alineadas al centro */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --texto: #d7d7db;
+  --texto-suave: #9a9aa3;
+  --texto-fuerte: #ffffff;
+  --borde: #3a3a42;
+  --borde-suave: #2c2c33;
+  --fondo-campo: #212127;
+  --acento: #90caf9;
+  --acento-suave: rgba(144, 202, 249, 0.12);
+  --aviso: #ffb74d;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  font: 14px/1.45 system-ui, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
 }
 
 body {
   margin: 0;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
+/* a ancho completo y alineado a la izquierda, que es lo que react-admin
+   espera: el la barra lateral y la cabecera las pone el */
+#root {
+  width: 100%;
   margin: 0;
+  text-align: left;
+  min-height: 100svh;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* ---- panel de configuracion ---- */
+
+/* react-admin mete los campos de la pestaña dentro de un Stack con
+   align-items: flex-start, y eso encoge a lo ancho del contenido a
+   cualquier hijo que no pida lo contrario -- de ahi que el panel se
+   quedara en una columna estrecha con el resto del ancho desaprovechado */
+.config-disposicion {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  width: 100%;
+  align-self: stretch;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
+/* el menu de las 18 categorias es largo, asi que se queda fijo y se
+   desplaza por su cuenta, sin arrastrar el formulario */
+.config-menu {
+  flex: 0 0 250px;
+  max-height: calc(100svh - 210px);
+  overflow-y: auto;
+  padding-right: 8px;
+  border-right: 1px solid var(--borde-suave);
+}
+
+.config-categoria {
+  margin-bottom: 14px;
+}
+
+.config-categoria-nombre {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.config-modulos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.config-modulo {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  color: var(--texto);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
   padding: 4px 8px;
-  background: var(--code-bg);
+  border-radius: 0 4px 4px 0;
+}
+
+.config-modulo:hover {
+  background: var(--borde-suave);
+}
+
+.config-modulo-activo {
+  background: var(--acento-suave);
+  border-left-color: var(--acento);
+  color: var(--texto-fuerte);
+  font-weight: 600;
+}
+
+.config-formulario {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-height: calc(100svh - 210px);
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.config-cabecera {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.config-titulo {
+  margin: 0;
+  font-size: 18px;
+  color: var(--texto-fuerte);
+}
+
+.config-ruta {
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+.config-recuento {
+  font-size: 12px;
+  color: var(--texto-suave);
+  margin: 0 0 14px;
+}
+
+.config-vacio {
+  color: var(--texto-suave);
+}
+
+/* ---- un campo ---- */
+
+.campo {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde-suave);
+}
+
+.campo-grupo {
+  padding: 0;
+  border: none;
+}
+
+.campo-etiqueta {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto-fuerte);
+  margin-bottom: 2px;
+}
+
+.campo-obligatorio {
+  color: var(--aviso);
+}
+
+.campo-marca {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--acento);
+  background: var(--acento-suave);
+}
+
+.campo-ayuda {
+  font-size: 12px;
+  color: var(--texto-suave);
+  margin-bottom: 6px;
+  max-width: 70ch;
+}
+
+.campo-control input[type="text"],
+.campo-control input[type="number"],
+.campo-control input:not([type]),
+.campo-control select,
+.campo-control textarea {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  font: inherit;
+  color: var(--texto-fuerte);
+  background: var(--fondo-campo);
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+}
+
+.campo-control input:focus,
+.campo-control select:focus,
+.campo-control textarea:focus {
+  outline: none;
+  border-color: var(--acento);
+}
+
+.campo-control input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--acento);
+}
+
+.campo-pie {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--texto-suave);
+}
+
+.campo-defecto code {
+  font-family: ui-monospace, Consolas, monospace;
+  background: var(--borde-suave);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--texto);
+}
+
+.campo-sin-defecto {
+  font-style: italic;
+}
+
+.campo-volver {
+  font: inherit;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--borde);
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.campo-volver:hover:not(:disabled) {
+  border-color: var(--acento);
+  color: var(--acento);
+}
+
+.campo-volver:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* un campo que ahora mismo no coincide con su valor original se marca,
+   para que se vea de un vistazo que se ha tocado en este modulo */
+.campo-cambiado {
+  border-left: 2px solid var(--aviso);
+  padding-left: 10px;
+  margin-left: -12px;
+}
+
+/* ---- un grupo (objeto anidado dentro del formulario) ---- */
+
+.grupo {
+  margin: 12px 0;
+  padding: 4px 14px 10px;
+  border: 1px solid var(--borde-suave);
+  border-radius: 6px;
+}
+
+.grupo-titulo {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+
+.grupo-ayuda {
+  font-size: 12px;
+  color: var(--texto-suave);
+  margin-bottom: 6px;
+}
+
+/* ---- pie del formulario ---- */
+
+.config-acciones {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 12px 0;
+  background: #1e1e24;
+  border-top: 1px solid var(--borde-suave);
+}
+
+.config-guardar {
+  font: inherit;
+  font-weight: 600;
+  padding: 7px 18px;
+  border: none;
+  border-radius: 4px;
+  background: var(--acento);
+  color: #10131a;
+  cursor: pointer;
+}
+
+.config-guardar:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.config-mensaje-ok {
+  color: #81c784;
+}
+
+.config-mensaje-error {
+  color: #e57373;
 }
