@@ -96,6 +96,32 @@ function establecerValorEnRuta(
   return resultado;
 }
 
+// dice por que ha fallado el guardado en vez de echarle la culpa a los
+// datos siempre: la sesion caducada y un campo mal puesto se arreglan de
+// formas distintas, y con un unico mensaje no hay manera de saber cual de
+// las dos es
+//
+// el panel y la aplicacion comparten la cookie de localhost, asi que
+// entrar en una cierra la sesion de la otra: es un 403 con los datos
+// perfectamente bien
+async function explicarFallo(respuesta: Response): Promise<string> {
+  if (respuesta.status === 401) {
+    return "error: se ha cerrado la sesion, vuelve a entrar y repite el cambio";
+  }
+  if (respuesta.status === 403) {
+    return "error: esta sesion no es de superadmin, comprueba con que usuario has entrado";
+  }
+
+  let detalle = "";
+  try {
+    const cuerpo = await respuesta.json();
+    if (cuerpo && typeof cuerpo.message === "string") detalle = ": " + cuerpo.message;
+  } catch {
+    // respuesta sin json, se queda solo el codigo
+  }
+  return `error al guardar (${respuesta.status})${detalle}`;
+}
+
 // panel de configuracion de un cliente, dividido en categorias y modulos
 // (menu lateral) en vez de un unico JSON gigante. cada modulo genera su
 // propio formulario a partir del schema real de Zod, convertido por el
@@ -169,7 +195,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     setGuardando(false);
 
     if (!respuesta.ok) {
-      setMensaje("error al guardar, revisa los datos e intentalo de nuevo");
+      setMensaje(await explicarFallo(respuesta));
       return;
     }
 
