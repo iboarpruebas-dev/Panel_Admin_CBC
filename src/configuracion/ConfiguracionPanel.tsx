@@ -5,6 +5,7 @@ import type { CategoriaPanel, ModuloPanel, RespuestaConfigSchema } from "./tipos
 import { extraerSchemaModulo } from "./extraerSchemaModulo";
 import { PlantillaCampo, PlantillaObjeto, type ContextoConfig } from "./PlantillaCampo";
 import { construirUiSchema } from "./construirUiSchema";
+import { soloLoCambiado } from "./soloLoCambiado";
 
 const URL_BASE = "http://localhost:3000";
 
@@ -136,7 +137,22 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   }, [clienteId]);
 
   async function guardarModulo() {
-    if (!moduloActivo) return;
+    if (!moduloActivo || !esquemaModulo) return;
+
+    // no se manda el formulario entero: react-jsonschema-form rellena
+    // solo los campos con valor por defecto, y guardarlos fijaria en la
+    // fila del cliente valores que nadie ha escrito
+    const aGuardar = soloLoCambiado(
+      datosEnEdicion,
+      leerValorEnRuta(configuracion, moduloActivo),
+      esquemaModulo
+    );
+
+    if (Object.keys(aGuardar).length === 0) {
+      setMensaje("no hay nada que guardar, este apartado esta como estaba");
+      return;
+    }
+
     setGuardando(true);
     setMensaje(null);
 
@@ -147,7 +163,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ ruta: moduloActivo.rutaSchema, valor: datosEnEdicion }),
+      body: JSON.stringify({ ruta: moduloActivo.rutaSchema, valor: aGuardar }),
     });
 
     setGuardando(false);
@@ -159,7 +175,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
 
     // refleja el cambio en el estado local, para que si se vuelve a este
     // mismo modulo sin recargar la pagina, se vean los valores guardados
-    setConfiguracion((actual) => establecerValorEnRuta(actual, moduloActivo.rutaSchema, datosEnEdicion));
+    setConfiguracion((actual) => establecerValorEnRuta(actual, moduloActivo.rutaSchema, aGuardar));
     setMensaje("guardado correctamente");
   }
 
