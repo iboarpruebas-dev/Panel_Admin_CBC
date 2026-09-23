@@ -6,6 +6,7 @@ import { extraerSchemaModulo } from "./extraerSchemaModulo";
 import { PlantillaCampo, PlantillaObjeto, type ContextoConfig } from "./PlantillaCampo";
 import { construirUiSchema } from "./construirUiSchema";
 import { soloLoCambiado } from "./soloLoCambiado";
+import { conValoresDeReferencia } from "./conValoresDeReferencia";
 
 const URL_BASE = "http://localhost:3000";
 
@@ -247,10 +248,14 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   }
 
   // el schema del modulo activo y su recuento de campos se calculan una
-  // sola vez por modulo, no en cada tecla que se pulse en el formulario
+  // sola vez por modulo, no en cada tecla que se pulse en el formulario;
+  // lleva ya como valor por defecto el de referencia de los widgets
   const esquemaModulo = useMemo(
-    () => (jsonSchema && moduloActivo ? extraerSchemaModulo(jsonSchema, moduloActivo) : null),
-    [jsonSchema, moduloActivo]
+    () =>
+      jsonSchema && moduloActivo
+        ? conValoresDeReferencia(extraerSchemaModulo(jsonSchema, moduloActivo), moduloActivo.rutaSchema, valoresDeReferencia)
+        : null,
+    [jsonSchema, moduloActivo, valoresDeReferencia]
   );
 
   // lo que vale ahora cualquier campo para este cliente: el guardado, o si
