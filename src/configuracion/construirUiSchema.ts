@@ -1,3 +1,5 @@
+import { leerVacio } from "./leerVacio";
+
 // el widget de casilla de verificacion de react-jsonschema-form dibuja
 // por su cuenta la descripcion del campo y la etiqueta al lado de la
 // casilla, asi que en un campo booleano el texto de ayuda salia dos
@@ -22,7 +24,11 @@ export function construirUiSchema(esquema: Record<string, unknown>): Record<stri
     if (sub.type === "object") {
       const anidado = construirUiSchema(sub);
       if (Object.keys(anidado).length > 0) ui[clave] = anidado;
+      continue;
     }
+    // un campo que vacio significa algo lo dice dentro de la propia casilla
+    const vacio = leerVacio(sub.description);
+    if (vacio) ui[clave] = { "ui:placeholder": vacio.valor };
   }
   return ui;
 }

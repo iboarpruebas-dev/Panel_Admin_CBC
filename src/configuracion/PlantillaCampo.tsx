@@ -1,4 +1,5 @@
 import type { FieldTemplateProps, ObjectFieldTemplateProps } from "@rjsf/utils";
+import { leerVacio } from "./leerVacio";
 
 // plantillas de dibujado del formulario de configuracion
 //
@@ -90,6 +91,7 @@ export function PlantillaCampo(props: FieldTemplateProps) {
   const valorDefecto = tieneDefecto ? (schema as { default?: unknown }).default : referencia;
   const hayOriginal = tieneDefecto || tieneReferencia;
   const cambiado = hayOriginal && !sonIguales(formData, valorDefecto);
+  const vacio = hayOriginal ? null : leerVacio(schema.description);
 
   return (
     <div className={`campo ${cambiado ? "campo-cambiado" : ""}`}>
@@ -128,6 +130,11 @@ export function PlantillaCampo(props: FieldTemplateProps) {
               {tieneDefecto ? "volver al original" : "poner ese valor"}
             </button>
           </>
+        ) : vacio ? (
+          <span className="campo-defecto">
+            valor original: <code>{vacio.valor}</code>
+            {vacio.explicacion && <> — {vacio.explicacion}</>}
+          </span>
         ) : (
           <span className="campo-defecto campo-sin-defecto">
             sin valor original, se puede dejar vacio
