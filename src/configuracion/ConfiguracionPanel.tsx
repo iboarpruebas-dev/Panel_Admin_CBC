@@ -145,6 +145,11 @@ async function explicarFallo(respuesta: Response): Promise<string> {
   let detalle = "";
   try {
     const cuerpo = await respuesta.json();
+    // una configuracion que no valida trae el motivo de cada fallo aparte,
+    // y ese motivo es lo unico que le sirve a quien esta rellenando
+    if (cuerpo && Array.isArray(cuerpo.detalles) && cuerpo.detalles.length > 0) {
+      return "no se ha guardado: " + cuerpo.detalles.map((d: { mensaje?: unknown }) => String(d.mensaje)).join(", ");
+    }
     if (cuerpo && typeof cuerpo.message === "string") detalle = ": " + cuerpo.message;
   } catch {
     // respuesta sin json, se queda solo el codigo
