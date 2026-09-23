@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import type { CategoriaPanel, ModuloPanel, RespuestaConfigSchema } from "./tipos";
@@ -92,7 +92,37 @@ function establecerValorEnRuta(
     actual = actual[clave] as Record<string, unknown>;
   }
   const claveFinal = ruta[ruta.length - 1];
-  actual[claveFinal] = { ...((actual[claveFinal] as Record<string, unknown>) ?? {}), ...(valor as Record<string, unknown>) };
+  actual[claveFinal] = combinarProfundo((actual[claveFinal] as Record<string, unknown>) ?? {}, valor as Record<string, unknown>);
+  return resultado;
+}
+
+const esObjeto = (v: unknown): v is Record<string, unknown> =>
+  v !== null && typeof v === "object" && !Array.isArray(v);
+
+// el panel manda solo lo que cambia, asi que un objeto anidado llega a
+// medias y tiene que sumarse a lo que habia, no sustituirlo
+function combinarProfundo(base: Record<string, unknown>, cambios: Record<string, unknown>): Record<string, unknown> {
+  const resultado = { ...base };
+  for (const [clave, valor] of Object.entries(cambios)) {
+    resultado[clave] = esObjeto(valor) && esObjeto(resultado[clave])
+      ? combinarProfundo(resultado[clave] as Record<string, unknown>, valor)
+      : valor;
+  }
+  return resultado;
+}
+
+// lo mismo que hace el backend al guardar, para que el estado local no se
+// quede diciendo algo distinto de lo que hay en la base
+function quitarEnRuta(configuracion: Record<string, unknown>, ruta: string[], borrar: string[][]): Record<string, unknown> {
+  const resultado = JSON.parse(JSON.stringify(configuracion));
+  for (const relativa of borrar) {
+    const completa = [...ruta, ...relativa];
+    let actual: unknown = resultado;
+    for (let i = 0; i < completa.length - 1; i++) {
+      actual = esObjeto(actual) ? actual[completa[i]] : undefined;
+    }
+    if (esObjeto(actual)) delete actual[completa[completa.length - 1]];
+  }
   return resultado;
 }
 
@@ -139,6 +169,8 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  // campos devueltos al original con el boton en esta edicion
+  const [restaurados, setRestaurados] = useState<Set<string>>(new Set());
 
   // se cargan el schema (una vez, es el mismo para todos los clientes) y
   // la configuracion real de este cliente en paralelo, al entrar
@@ -168,13 +200,14 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     // no se manda el formulario entero: react-jsonschema-form rellena
     // solo los campos con valor por defecto, y guardarlos fijaria en la
     // fila del cliente valores que nadie ha escrito
-    const aGuardar = soloLoCambiado(
+    const { valor: aGuardar, borrar } = soloLoCambiado(
       datosEnEdicion,
       leerValorEnRuta(configuracion, moduloActivo),
-      esquemaModulo
+      esquemaModulo,
+      restaurados
     );
 
-    if (Object.keys(aGuardar).length === 0) {
+    if (Object.keys(aGuardar).length === 0 && borrar.length === 0) {
       setMensaje("no hay nada que guardar, este apartado esta como estaba");
       return;
     }
@@ -189,7 +222,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ ruta: moduloActivo.rutaSchema, valor: aGuardar }),
+      body: JSON.stringify({ ruta: moduloActivo.rutaSchema, valor: aGuardar, borrar }),
     });
 
     setGuardando(false);
@@ -201,7 +234,10 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
 
     // refleja el cambio en el estado local, para que si se vuelve a este
     // mismo modulo sin recargar la pagina, se vean los valores guardados
-    setConfiguracion((actual) => establecerValorEnRuta(actual, moduloActivo.rutaSchema, aGuardar));
+    setConfiguracion((actual) =>
+      quitarEnRuta(establecerValorEnRuta(actual, moduloActivo.rutaSchema, aGuardar), moduloActivo.rutaSchema, borrar)
+    );
+    setRestaurados(new Set());
     setMensaje("guardado correctamente");
   }
 
@@ -212,7 +248,24 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     [jsonSchema, moduloActivo]
   );
 
-  const uiSchema = useMemo(() => (esquemaModulo ? construirUiSchema(esquemaModulo) : {}), [esquemaModulo]);
+  // lo que vale ahora cualquier campo para este cliente: el guardado, o si
+  // no esta, su valor por defecto del schema
+  const resolverReferencia = useCallback(
+    (ruta: string): unknown => {
+      const partes = ruta.split(".");
+      const guardado = partes.reduce<unknown>((a, k) => (esObjeto(a) ? a[k] : undefined), configuracion);
+      if (guardado !== undefined) return guardado;
+      let nodo: unknown = (jsonSchema?.definitions as Record<string, unknown> | undefined)?.ClientConfig;
+      for (const p of partes) nodo = esObjeto(nodo) && esObjeto(nodo.properties) ? nodo.properties[p] : undefined;
+      return esObjeto(nodo) ? nodo.default : undefined;
+    },
+    [configuracion, jsonSchema]
+  );
+
+  const uiSchema = useMemo(
+    () => (esquemaModulo ? construirUiSchema(esquemaModulo, resolverReferencia) : {}),
+    [esquemaModulo, resolverReferencia]
+  );
 
   const recuento = useMemo(
     () => (esquemaModulo && moduloActivo ? contarCampos(esquemaModulo, leerValorEnRuta(configuracion, moduloActivo)) : null),
@@ -232,6 +285,8 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
         rutaModulo: moduloActivo.rutaSchema,
         configuracionGuardada: leerValorEnRuta(configuracion, moduloActivo),
         valoresDeReferencia,
+        resolverReferencia,
+        marcarRestaurado: (ruta: string) => setRestaurados((antes) => new Set(antes).add(ruta)),
       }
     : undefined;
 
@@ -259,6 +314,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
                     onClick={() => {
                       setModuloActivo(modulo);
                       setDatosEnEdicion(leerValorEnRuta(configuracion, modulo));
+                      setRestaurados(new Set());
                       setMensaje(null);
                     }}
                   >

@@ -10,7 +10,10 @@ import { leerVacio } from "./leerVacio";
 // booleanos -- la plantilla de campo sigue poniendo la etiqueta, para que
 // un booleano se lea igual que los demas campos
 
-export function construirUiSchema(esquema: Record<string, unknown>): Record<string, unknown> {
+export function construirUiSchema(
+  esquema: Record<string, unknown>,
+  resolverReferencia?: (ruta: string) => unknown
+): Record<string, unknown> {
   const propiedades = esquema.properties as Record<string, unknown> | undefined;
   if (!propiedades) return {};
 
@@ -22,13 +25,18 @@ export function construirUiSchema(esquema: Record<string, unknown>): Record<stri
       continue;
     }
     if (sub.type === "object") {
-      const anidado = construirUiSchema(sub);
+      const anidado = construirUiSchema(sub, resolverReferencia);
       if (Object.keys(anidado).length > 0) ui[clave] = anidado;
       continue;
     }
     // un campo que vacio significa algo lo dice dentro de la propia casilla
     const vacio = leerVacio(sub.description);
-    if (vacio) ui[clave] = { "ui:placeholder": vacio.valor };
+    if (vacio) {
+      const texto = vacio.referencia && resolverReferencia
+        ? String(resolverReferencia(vacio.referencia) ?? vacio.valor)
+        : vacio.valor;
+      ui[clave] = { "ui:placeholder": texto };
+    }
   }
   return ui;
 }

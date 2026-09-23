@@ -1,18 +1,17 @@
-// deja de un modulo solo lo que hay que guardar
+// separa de un modulo lo que hay que escribir y lo que hay que borrar
 //
 // react-jsonschema-form rellena solo los campos que el schema declara con
 // valor por defecto, asi que el formulario llega con valores que nadie ha
-// escrito. si se guardara tal cual, esos valores quedarian fijados en la
-// fila del cliente, y el dia que se cambiara uno en el codigo el cliente
-// se quedaria con el viejo, porque ya no estaria ausente
+// escrito, y guardarlos los dejaria fijados en la fila del cliente
 //
-// se descarta un campo en dos casos: si ya vale lo que vale lo guardado,
-// porque mandarlo no cambiaria nada, y si no estaba guardado y su valor
-// es exactamente el valor por defecto, que es la marca de que nadie lo ha
-// tocado
+// un campo que no se ha tocado no se toca nunca, aunque este guardado
+// con el mismo valor que su original: quitarlo seria un cambio que nadie
+// ha pedido. se borra solo lo que se devuelve al original con el boton, o
+// se vacia a mano, y se escribe lo que trae un valor propio distinto de
+// lo guardado
 //
-// el backend combina lo que recibe con lo que ya hay en esa ruta, asi que
-// lo que no se manda se queda como esta
+// volver al original es quitar lo que el cliente habia puesto, no
+// escribir encima el valor de hoy
 
 function sonIguales(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -20,45 +19,86 @@ function sonIguales(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+const esObjeto = (v: unknown): v is Record<string, unknown> =>
+  v !== null && typeof v === "object" && !Array.isArray(v);
+
+export interface Cambios {
+  valor: Record<string, unknown>;
+  // rutas relativas al modulo de los campos que hay que quitar
+  borrar: string[][];
+}
+
 export function soloLoCambiado(
   datos: Record<string, unknown>,
   guardado: Record<string, unknown>,
-  esquema: Record<string, unknown>
-): Record<string, unknown> {
+  esquema: Record<string, unknown>,
+  // rutas, unidas con puntos, de los campos que se han devuelto al
+  // original con el boton en esta edicion
+  restaurados: Set<string> = new Set(),
+  prefijo: string[] = []
+): Cambios {
   const propiedades = (esquema.properties ?? {}) as Record<string, Record<string, unknown>>;
-  const resultado: Record<string, unknown> = {};
+  const valor: Record<string, unknown> = {};
+  const borrar: string[][] = [];
 
-  for (const [clave, valor] of Object.entries(datos)) {
-    const subEsquema = propiedades[clave];
-    const subGuardado = guardado[clave];
+  // se miran tambien las claves que estaban guardadas y ya no llegan: un
+  // campo vaciado puede desaparecer del formulario en vez de llegar vacio
+  const claves = new Set([...Object.keys(datos), ...Object.keys(guardado)]);
 
-    // un objeto anidado se mira campo a campo, y solo se incluye si
-    // dentro queda algo que guardar
-    if (valor !== null && typeof valor === "object" && !Array.isArray(valor) && subEsquema?.properties) {
+  for (const clave of claves) {
+    const actual = datos[clave];
+    const antes = guardado[clave];
+    const sub = propiedades[clave];
+    const ruta = [...prefijo, clave];
+
+    if (sub?.properties && (esObjeto(actual) || esObjeto(antes))) {
+      if (actual === undefined || actual === null) {
+        if (antes !== undefined) borrar.push(ruta);
+        continue;
+      }
       const dentro = soloLoCambiado(
-        valor as Record<string, unknown>,
-        (subGuardado ?? {}) as Record<string, unknown>,
-        subEsquema
+        esObjeto(actual) ? actual : {},
+        esObjeto(antes) ? antes : {},
+        sub,
+        restaurados,
+        ruta
       );
-      if (Object.keys(dentro).length > 0) resultado[clave] = dentro;
+      if (Object.keys(dentro.valor).length > 0) valor[clave] = dentro.valor;
+      borrar.push(...dentro.borrar);
       continue;
     }
 
-    const noEstaba = subGuardado === undefined;
+    const estaba = antes !== undefined;
+    const tieneDefecto = sub !== undefined && Object.prototype.hasOwnProperty.call(sub, "default");
+    const original = tieneDefecto ? sub.default : undefined;
+    const vacio = actual === undefined || actual === null;
 
-    // ya vale lo que vale lo guardado, no hay nada que cambiar
-    if (!noEstaba && sonIguales(valor, subGuardado)) continue;
+    // devuelto al original con el boton, y sin tocar despues: se quita
+    if (restaurados.has(ruta.join(".")) && (vacio || sonIguales(actual, original))) {
+      if (estaba) borrar.push(ruta);
+      continue;
+    }
 
-    // nunca se guardo y vale el valor por defecto: lo ha puesto el
-    // formulario, no una persona
-    const esElDefecto =
-      subEsquema !== undefined &&
-      Object.prototype.hasOwnProperty.call(subEsquema, "default") &&
-      sonIguales(valor, subEsquema.default);
-    if (noEstaba && esElDefecto) continue;
+    // vaciado a mano
+    if (vacio) {
+      if (estaba) borrar.push(ruta);
+      continue;
+    }
 
-    resultado[clave] = valor;
+    // sin tocar: se queda como esta, sea cual sea su valor
+    if (estaba && sonIguales(actual, antes)) continue;
+
+    // vale su original sin estar guardado: lo ha puesto el formulario
+    if (!estaba && tieneDefecto && sonIguales(actual, original)) continue;
+
+    // cambiado a mano a su valor original: equivale a volver al original
+    if (estaba && tieneDefecto && sonIguales(actual, original)) {
+      borrar.push(ruta);
+      continue;
+    }
+
+    valor[clave] = actual;
   }
 
-  return resultado;
+  return { valor, borrar };
 }

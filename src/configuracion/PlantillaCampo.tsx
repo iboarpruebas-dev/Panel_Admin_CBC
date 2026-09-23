@@ -45,6 +45,13 @@ export interface ContextoConfig {
   // valor que usa la aplicacion en los campos que el schema deja
   // opcionales a proposito, indexado por su ruta completa
   valoresDeReferencia: Record<string, unknown>;
+  // valor que tiene ahora otro campo de la configuracion de este cliente,
+  // el guardado o si no su valor por defecto: lo usan los campos que
+  // vacios siguen a otro, como un color que sigue a un gris del tema
+  resolverReferencia: (ruta: string) => unknown;
+  // apunta que un campo se ha devuelto al original con el boton, para que
+  // al guardar se quite en vez de escribir encima su valor de hoy
+  marcarRestaurado: (ruta: string) => void;
 }
 
 // mira si este cliente tiene guardado algo en esa ruta exacta, la
@@ -91,7 +98,14 @@ export function PlantillaCampo(props: FieldTemplateProps) {
   const valorDefecto = tieneDefecto ? (schema as { default?: unknown }).default : referencia;
   const hayOriginal = tieneDefecto || tieneReferencia;
   const cambiado = hayOriginal && !sonIguales(formData, valorDefecto);
+
+  // un campo sin valor original puede decir en su texto que significa
+  // dejarlo vacio; si apunta a otro campo, se ensena lo que vale ese
   const vacio = hayOriginal ? null : leerVacio(schema.description);
+  const valorVacio = vacio?.referencia
+    ? formatearValor(contexto?.resolverReferencia(vacio.referencia))
+    : vacio?.valor;
+  const tieneValorPropio = formData !== undefined && formData !== null && formData !== "";
 
   return (
     <div className={`campo ${cambiado ? "campo-cambiado" : ""}`}>
@@ -117,13 +131,16 @@ export function PlantillaCampo(props: FieldTemplateProps) {
             <button
               type="button"
               className="campo-volver"
-              disabled={!cambiado}
-              onClick={() => onChange(valorDefecto, fieldPathId.path)}
+              disabled={tieneDefecto ? !cambiado && !guardado : !cambiado}
+              onClick={() => {
+                if (tieneDefecto) contexto?.marcarRestaurado(fieldPathId.path.join("."));
+                onChange(valorDefecto, fieldPathId.path);
+              }}
               title={
-                !cambiado
-                  ? "este campo ya tiene ese valor"
-                  : tieneDefecto
-                    ? "deja este campo como estaba"
+                tieneDefecto
+                  ? "quita lo que se haya puesto aqui y deja el valor original"
+                  : !cambiado
+                    ? "este campo ya tiene ese valor"
                     : "escribe aqui el valor que la aplicacion usa hoy"
               }
             >
@@ -131,10 +148,24 @@ export function PlantillaCampo(props: FieldTemplateProps) {
             </button>
           </>
         ) : vacio ? (
-          <span className="campo-defecto">
-            valor original: <code>{vacio.valor}</code>
-            {vacio.explicacion && <> — {vacio.explicacion}</>}
-          </span>
+          <>
+            <span className="campo-defecto">
+              valor original: <code>{valorVacio}</code>
+              {vacio.explicacion && <> — {vacio.explicacion}</>}
+            </span>
+            <button
+              type="button"
+              className="campo-volver"
+              disabled={!tieneValorPropio}
+              onClick={() => {
+                contexto?.marcarRestaurado(fieldPathId.path.join("."));
+                onChange(undefined, fieldPathId.path);
+              }}
+              title={tieneValorPropio ? "quita lo que se haya puesto aqui y deja el valor original" : "este campo ya tiene su valor original"}
+            >
+              volver al original
+            </button>
+          </>
         ) : (
           <span className="campo-defecto campo-sin-defecto">
             sin valor original, se puede dejar vacio
