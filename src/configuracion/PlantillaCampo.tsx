@@ -18,7 +18,7 @@ import { leerVacio } from "./leerVacio";
 // el mismo formato que usa el backend al escribir los textos de ayuda,
 // para que un campo diga lo mismo en los dos sitios
 function formatearValor(valor: unknown): string {
-  if (valor === null) return "vacio";
+  if (valor === null || valor === "") return "vacio";
   if (typeof valor === "boolean") return valor ? "si" : "no";
   if (typeof valor === "number" || typeof valor === "string") return String(valor);
   if (Array.isArray(valor)) return valor.length === 0 ? "lista vacia" : valor.map(formatearValor).join(", ");
