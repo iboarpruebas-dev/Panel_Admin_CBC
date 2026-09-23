@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { FieldTemplateProps, ObjectFieldTemplateProps } from "@rjsf/utils";
 import { leerVacio } from "./leerVacio";
 
@@ -70,6 +71,10 @@ function estaGuardado(contexto: ContextoConfig | undefined, rutaCampo: (string |
 
 export function PlantillaCampo(props: FieldTemplateProps) {
   const { id, label, description, children, errors, help, hidden, required, schema, displayLabel, formData, onChange, fieldPathId, registry } = props;
+  // la casilla numerica recuerda lo que se escribio y, si es el original
+  // con ceros detras (100 con original 1), lo sigue mostrando, asi que al
+  // volver al original se dibuja la casilla de nuevo
+  const [vueltas, setVueltas] = useState(0);
 
   if (hidden) {
     return <div style={{ display: "none" }}>{children}</div>;
@@ -119,7 +124,7 @@ export function PlantillaCampo(props: FieldTemplateProps) {
 
       {description && <div className="campo-ayuda">{description}</div>}
 
-      <div className="campo-control">{children}</div>
+      <div className="campo-control" key={vueltas}>{children}</div>
 
       <div className="campo-pie">
         {hayOriginal ? (
@@ -135,6 +140,7 @@ export function PlantillaCampo(props: FieldTemplateProps) {
               onClick={() => {
                 if (tieneDefecto) contexto?.marcarRestaurado(fieldPathId.path.join("."));
                 onChange(valorDefecto, fieldPathId.path);
+                setVueltas((n) => n + 1);
               }}
               title={
                 tieneDefecto
@@ -160,6 +166,7 @@ export function PlantillaCampo(props: FieldTemplateProps) {
               onClick={() => {
                 contexto?.marcarRestaurado(fieldPathId.path.join("."));
                 onChange(undefined, fieldPathId.path);
+                setVueltas((n) => n + 1);
               }}
               title={tieneValorPropio ? "quita lo que se haya puesto aqui y deja el valor original" : "este campo ya tiene su valor original"}
             >
