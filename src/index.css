@@ -15,10 +15,34 @@
   --acento: #90caf9;
   --acento-suave: rgba(144, 202, 249, 0.12);
   --aviso: #ffb74d;
+  --fondo-acciones: #1e1e24;
+  --texto-sobre-acento: #10131a;
+  --ok: #81c784;
+  --error: #e57373;
 
+  /* el esquema de color de la pagina (barras de desplazamiento, casillas
+     nativas) lo pone react-admin segun el modo que se elige en su cabecera */
   font: 14px/1.45 system-ui, "Segoe UI", Roboto, sans-serif;
-  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
+}
+
+/* los colores de arriba son los del modo oscuro; en modo claro el panel
+   de configuracion usa estos, los componentes de react-admin ya cambian
+   solos */
+.config-disposicion[data-modo="light"] {
+  --texto: #33333a;
+  --texto-suave: #6b6b76;
+  --texto-fuerte: #111114;
+  --borde: #c4c4cc;
+  --borde-suave: #e2e2e8;
+  --fondo-campo: #ffffff;
+  --acento: #1976d2;
+  --acento-suave: rgba(25, 118, 210, 0.08);
+  --aviso: #e65100;
+  --fondo-acciones: #ffffff;
+  --texto-sobre-acento: #ffffff;
+  --ok: #2e7d32;
+  --error: #d32f2f;
 }
 
 body {
@@ -286,6 +310,55 @@ body {
   margin-bottom: 6px;
 }
 
+/* ---- una lista de valores (como las opciones de filas por pagina) ---- */
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lista-elemento {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lista-casilla {
+  flex: 0 1 420px;
+}
+
+.lista-botones {
+  display: flex;
+  gap: 4px;
+}
+
+.lista-boton {
+  font: inherit;
+  font-size: 12px;
+  min-width: 28px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--borde);
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.lista > .lista-boton {
+  align-self: flex-start;
+}
+
+.lista-boton:hover:not(:disabled) {
+  border-color: var(--acento);
+  color: var(--acento);
+}
+
+.lista-boton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* ---- pie del formulario ---- */
 
 .config-acciones {
@@ -296,7 +369,7 @@ body {
   gap: 14px;
   margin-top: 16px;
   padding: 12px 0;
-  background: #1e1e24;
+  background: var(--fondo-acciones);
   border-top: 1px solid var(--borde-suave);
 }
 
@@ -307,7 +380,7 @@ body {
   border: none;
   border-radius: 4px;
   background: var(--acento);
-  color: #10131a;
+  color: var(--texto-sobre-acento);
   cursor: pointer;
 }
 
@@ -317,9 +390,9 @@ body {
 }
 
 .config-mensaje-ok {
-  color: #81c784;
+  color: var(--ok);
 }
 
 .config-mensaje-error {
-  color: #e57373;
+  color: var(--error);
 }

@@ -3,7 +3,14 @@ import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import type { CategoriaPanel, ModuloPanel, RespuestaConfigSchema } from "./tipos";
 import { extraerSchemaModulo } from "./extraerSchemaModulo";
-import { PlantillaCampo, PlantillaObjeto, type ContextoConfig } from "./PlantillaCampo";
+import { useTheme } from "react-admin";
+import {
+  PlantillaCampo,
+  PlantillaElementoLista,
+  PlantillaLista,
+  PlantillaObjeto,
+  type ContextoConfig,
+} from "./PlantillaCampo";
 import { construirUiSchema } from "./construirUiSchema";
 import { soloLoCambiado } from "./soloLoCambiado";
 import { conValoresDeReferencia } from "./conValoresDeReferencia";
@@ -177,6 +184,9 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   const [mensaje, setMensaje] = useState<string | null>(null);
   // campos devueltos al original con el boton en esta edicion
   const [restaurados, setRestaurados] = useState<Set<string>>(new Set());
+  // el modo claro u oscuro que se elige en la cabecera de react-admin: los
+  // colores del panel salen de el (ver index.css)
+  const [modo] = useTheme();
 
   // se cargan el schema (una vez, es el mismo para todos los clientes) y
   // la configuracion real de este cliente en paralelo, al entrar
@@ -309,7 +319,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   }
 
   return (
-    <div className="config-disposicion">
+    <div className="config-disposicion" data-modo={modo}>
       {/* menu lateral: categorias, cada una con sus modulos debajo */}
       <nav className="config-menu">
         {categorias.map((categoria) => (
@@ -370,7 +380,12 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
               formData={datosEnEdicion}
               onChange={({ formData }) => setDatosEnEdicion(formData)}
               disabled={guardando}
-              templates={{ FieldTemplate: PlantillaCampo, ObjectFieldTemplate: PlantillaObjeto }}
+              templates={{
+                FieldTemplate: PlantillaCampo,
+                ObjectFieldTemplate: PlantillaObjeto,
+                ArrayFieldTemplate: PlantillaLista,
+                ArrayFieldItemTemplate: PlantillaElementoLista,
+              }}
               formContext={contexto}
             >
               <div />

@@ -1,5 +1,10 @@
 import { useState } from "react";
-import type { FieldTemplateProps, ObjectFieldTemplateProps } from "@rjsf/utils";
+import type {
+  ArrayFieldItemTemplateProps,
+  ArrayFieldTemplateProps,
+  FieldTemplateProps,
+  ObjectFieldTemplateProps,
+} from "@rjsf/utils";
 import { leerVacio } from "./leerVacio";
 
 // plantillas de dibujado del formulario de configuracion
@@ -87,6 +92,13 @@ export function PlantillaCampo(props: FieldTemplateProps) {
     return <div className="campo-grupo">{children}</div>;
   }
 
+  // cada elemento de una lista (cada numero de pageSizeOptions) no es un
+  // campo suelto: el nombre, el valor original y el boton de volver son
+  // de la lista entera, asi que aqui solo va su casilla
+  if (typeof fieldPathId.path[fieldPathId.path.length - 1] === "number") {
+    return <div className="lista-casilla">{children}{errors}</div>;
+  }
+
   const contexto = registry.formContext as ContextoConfig | undefined;
   const guardado = estaGuardado(contexto, fieldPathId.path);
 
@@ -114,7 +126,7 @@ export function PlantillaCampo(props: FieldTemplateProps) {
 
   return (
     <div className={`campo ${cambiado ? "campo-cambiado" : ""}`}>
-      {(displayLabel || schema.type === "boolean") && label && (
+      {(displayLabel || schema.type === "boolean" || schema.type === "array") && label && (
         <label className="campo-etiqueta" htmlFor={id}>
           {label}
           {required && <span className="campo-obligatorio"> *</span>}
@@ -215,5 +227,47 @@ export function PlantillaObjeto(props: ObjectFieldTemplateProps) {
         <div key={propiedad.name}>{propiedad.content}</div>
       ))}
     </fieldset>
+  );
+}
+
+// una lista de valores (como las opciones de filas por pagina): el nombre,
+// la ayuda y el valor original ya los pone PlantillaCampo alrededor, asi
+// que aqui solo van sus elementos, uno por linea, y el boton de añadir
+export function PlantillaLista(props: ArrayFieldTemplateProps) {
+  const { items, canAdd, onAddClick, disabled, readonly, fieldPathId } = props;
+  return (
+    <div className="lista" id={fieldPathId.$id}>
+      {items}
+      {canAdd && (
+        <button type="button" className="lista-boton" onClick={onAddClick} disabled={disabled || readonly}>
+          + añadir
+        </button>
+      )}
+    </div>
+  );
+}
+
+// un elemento de la lista: su casilla y, al lado, subir, bajar y quitar
+export function PlantillaElementoLista(props: ArrayFieldItemTemplateProps) {
+  const { children, hasToolbar, buttonsProps } = props;
+  const { hasMoveUp, hasMoveDown, hasRemove, onMoveUpItem, onMoveDownItem, onRemoveItem } = buttonsProps;
+  const bloqueado = buttonsProps.disabled || buttonsProps.readonly;
+  return (
+    <div className="lista-elemento">
+      {children}
+      {hasToolbar && (
+        <div className="lista-botones">
+          {(hasMoveUp || hasMoveDown) && (
+            <>
+              <button type="button" className="lista-boton" title="subir" onClick={onMoveUpItem} disabled={bloqueado || !hasMoveUp}>↑</button>
+              <button type="button" className="lista-boton" title="bajar" onClick={onMoveDownItem} disabled={bloqueado || !hasMoveDown}>↓</button>
+            </>
+          )}
+          {hasRemove && (
+            <button type="button" className="lista-boton" title="quitar" onClick={onRemoveItem} disabled={bloqueado}>✕</button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
