@@ -181,7 +181,8 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   const [datosEnEdicion, setDatosEnEdicion] = useState<Record<string, unknown>>({});
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
-  const [mensaje, setMensaje] = useState<string | null>(null);
+  // el aviso junto al boton de guardar, en rojo si no se ha guardado
+  const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
   // campos devueltos al original con el boton en esta edicion
   const [restaurados, setRestaurados] = useState<Set<string>>(new Set());
   // el modo claro u oscuro que se elige en la cabecera de react-admin: los
@@ -224,7 +225,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     );
 
     if (Object.keys(aGuardar).length === 0 && borrar.length === 0) {
-      setMensaje("no hay nada que guardar, este apartado esta como estaba");
+      setMensaje({ texto: "no hay nada que guardar, este apartado esta como estaba", error: false });
       return;
     }
 
@@ -244,7 +245,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     setGuardando(false);
 
     if (!respuesta.ok) {
-      setMensaje(await explicarFallo(respuesta));
+      setMensaje({ texto: await explicarFallo(respuesta), error: true });
       return;
     }
 
@@ -254,7 +255,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
       quitarEnRuta(establecerValorEnRuta(actual, moduloActivo.rutaSchema, aGuardar), moduloActivo.rutaSchema, borrar)
     );
     setRestaurados(new Set());
-    setMensaje("guardado correctamente");
+    setMensaje({ texto: "guardado correctamente", error: false });
   }
 
   // el schema del modulo activo y su recuento de campos se calculan una
@@ -395,8 +396,8 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
                 {guardando ? "guardando..." : "guardar cambios"}
               </button>
               {mensaje && (
-                <span className={mensaje.startsWith("error") ? "config-mensaje-error" : "config-mensaje-ok"}>
-                  {mensaje}
+                <span className={mensaje.error ? "config-mensaje-error" : "config-mensaje-ok"}>
+                  {mensaje.texto}
                 </span>
               )}
             </div>
