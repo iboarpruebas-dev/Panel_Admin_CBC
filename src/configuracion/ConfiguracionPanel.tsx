@@ -263,7 +263,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   // lleva ya como valor por defecto el de referencia de los widgets
   const esquemaModulo = useMemo(
     () =>
-      jsonSchema && moduloActivo
+      jsonSchema && moduloActivo && !moduloActivo.aviso
         ? conValoresDeReferencia(extraerSchemaModulo(jsonSchema, moduloActivo), moduloActivo.rutaSchema, valoresDeReferencia)
         : null,
     [jsonSchema, moduloActivo, valoresDeReferencia]
@@ -351,6 +351,15 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
       {/* formulario del modulo seleccionado */}
       <div className="config-formulario">
         {!moduloActivo && <p className="config-vacio">elige una seccion del menu para empezar</p>}
+
+        {moduloActivo?.aviso && (
+          <div>
+            <div className="config-cabecera">
+              <h3 className="config-titulo">{moduloActivo.nombre}</h3>
+            </div>
+            <p className="config-aviso">{moduloActivo.aviso}</p>
+          </div>
+        )}
 
         {moduloActivo && esquemaModulo && (
           <div>

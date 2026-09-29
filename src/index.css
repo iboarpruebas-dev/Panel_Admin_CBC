@@ -160,6 +160,15 @@ body {
   margin: 0 0 14px;
 }
 
+/* el texto de un modulo que no edita nada, solo explica algo; los
+   parrafos vienen separados por una linea en blanco */
+.config-aviso {
+  max-width: 70ch;
+  margin: 8px 0 0;
+  color: var(--texto);
+  white-space: pre-line;
+}
+
 .config-vacio {
   color: var(--texto-suave);
 }

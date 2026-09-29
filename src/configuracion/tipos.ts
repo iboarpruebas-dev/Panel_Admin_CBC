@@ -6,6 +6,9 @@ export interface ModuloPanel {
   nombre: string;
   rutaSchema: string[];
   campos?: string[];
+  // un modulo que no edita nada y solo explica algo que no se configura
+  // por cliente: se enseña el texto en vez del formulario
+  aviso?: string;
 }
 
 export interface CategoriaPanel {
