@@ -175,6 +175,9 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   const [valoresDeReferencia, setValoresDeReferencia] = useState<Record<string, unknown>>({});
   const [configuracion, setConfiguracion] = useState<Record<string, unknown>>({});
   const [moduloActivo, setModuloActivo] = useState<ModuloPanel | null>(null);
+  // la categoria desplegada del menu: solo una a la vez, para que el menu
+  // no crezca; al entrar estan todas cerradas
+  const [categoriaAbierta, setCategoriaAbierta] = useState<string | null>(null);
   // valores del formulario mientras se editan, separado de "configuracion"
   // (que es lo ya guardado) -- se actualiza en cada cambio via onChange,
   // nunca al enviar un formulario nativo
@@ -321,31 +324,46 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
 
   return (
     <div className="config-disposicion" data-modo={modo}>
-      {/* menu lateral: categorias, cada una con sus modulos debajo */}
+      {/* menu lateral: categorias desplegables, cada una con sus modulos
+          debajo. la del modulo que se edita queda marcada aunque se cierre */}
       <nav className="config-menu">
-        {categorias.map((categoria) => (
-          <div key={categoria.id} className="config-categoria">
-            <p className="config-categoria-nombre">{categoria.nombre}</p>
-            <ul className="config-modulos">
-              {categoria.modulos.map((modulo) => (
-                <li key={modulo.id}>
-                  <button
-                    type="button"
-                    className={`config-modulo ${moduloActivo?.id === modulo.id ? "config-modulo-activo" : ""}`}
-                    onClick={() => {
-                      setModuloActivo(modulo);
-                      setDatosEnEdicion(leerValorEnRuta(configuracion, modulo));
-                      setRestaurados(new Set());
-                      setMensaje(null);
-                    }}
-                  >
-                    {modulo.nombre}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {categorias.map((categoria) => {
+          const abierta = categoriaAbierta === categoria.id;
+          const actual = categoria.modulos.some((modulo) => modulo.id === moduloActivo?.id);
+          return (
+            <div key={categoria.id} className="config-categoria">
+              <button
+                type="button"
+                className={`config-categoria-nombre ${actual ? "config-categoria-actual" : ""}`}
+                aria-expanded={abierta}
+                onClick={() => setCategoriaAbierta(abierta ? null : categoria.id)}
+              >
+                <span>{categoria.nombre} ({categoria.modulos.length})</span>
+                <span className="config-categoria-icono" aria-hidden="true">{abierta ? "−" : "+"}</span>
+              </button>
+              {abierta && (
+                <ul className="config-modulos">
+                  {categoria.modulos.map((modulo) => (
+                    <li key={modulo.id}>
+                      <button
+                        type="button"
+                        className={`config-modulo ${moduloActivo?.id === modulo.id ? "config-modulo-activo" : ""}`}
+                        onClick={() => {
+                          setModuloActivo(modulo);
+                          setDatosEnEdicion(leerValorEnRuta(configuracion, modulo));
+                          setRestaurados(new Set());
+                          setMensaje(null);
+                        }}
+                      >
+                        {modulo.nombre}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       {/* formulario del modulo seleccionado */}

@@ -83,21 +83,49 @@ body {
 }
 
 .config-categoria {
-  margin-bottom: 14px;
+  margin-bottom: 2px;
 }
 
 .config-categoria-nombre {
-  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
+  text-align: left;
   text-transform: uppercase;
   color: var(--texto-suave);
 }
 
+.config-categoria-nombre:hover {
+  background: var(--borde-suave);
+}
+
+/* la categoria del modulo que se esta editando */
+.config-categoria-actual {
+  color: var(--acento);
+}
+
+.config-categoria-icono {
+  flex: 0 0 auto;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+}
+
 .config-modulos {
   list-style: none;
-  margin: 0;
+  margin: 0 0 8px;
   padding: 0;
 }
 
