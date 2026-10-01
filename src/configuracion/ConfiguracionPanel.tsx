@@ -14,8 +14,7 @@ import {
 import { construirUiSchema } from "./construirUiSchema";
 import { soloLoCambiado } from "./soloLoCambiado";
 import { conValoresDeReferencia } from "./conValoresDeReferencia";
-
-const URL_BASE = "http://localhost:3000";
+import { URL_BASE } from "../providers/urlBase";
 
 interface Props {
   clienteId: string | number;

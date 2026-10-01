@@ -1,8 +1,5 @@
 import type { AuthProvider } from "react-admin";
-
-// direccion base de tu backend express, en local es el puerto que uses
-// con npm run dev (PORT_SERVER en tu env), ajustalo si es distinto
-const URL_BASE = "http://localhost:3000";
+import { URL_BASE } from "./urlBase";
 
 // conecta con tu sistema de login real (/user/login, /user/logout,
 // /user/profile), usa la cookie httpOnly que ya existe, nunca guarda

@@ -1,7 +1,6 @@
 import simpleRestProvider from "ra-data-simple-rest";
 import { fetchUtils } from "react-admin";
-
-const URL_BASE = "http://localhost:3000";
+import { URL_BASE } from "./urlBase";
 
 // ra-data-simple-rest, con un unico ajuste: incluir la cookie de sesion
 // en cada peticion (fetch, por defecto, no la manda sola entre puertos
