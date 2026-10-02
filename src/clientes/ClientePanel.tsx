@@ -11,16 +11,23 @@ import {
   BooleanInput,
   required,
   useRecordContext,
+  Toolbar,
+  SaveButton,
+  useLocation,
 } from "react-admin";
 import ConfiguracionPanel from "../configuracion/ConfiguracionPanel";
+import EliminarClienteDefinitivo from "./EliminarClienteDefinitivo";
 
 // las 3 pantallas de gestion de clientes: listado, edicion, creacion
-// el borrado (boton "eliminar" de la lista) nunca borra de verdad, el
-// backend lo convierte en activo=false
+// desactivar un cliente es el switch "activo" de la edicion; "eliminar",
+// en la barra de la edicion, lo borra de verdad con sus usuarios y sus
+// informes
 
 export const ClienteList = () => (
   <List>
-    <Datagrid rowClick="edit">
+    {/* sin casillas ni borrado en bloque: solo se elimina desde la ficha,
+    con su aviso y la contraseña */}
+    <Datagrid rowClick="edit" bulkActionButtons={false}>
       <TextField source="id" />
       <TextField source="nombre_cliente" label="Nombre" />
       <BooleanField source="activo" />
@@ -36,9 +43,22 @@ const PestanaConfiguracion = () => {
   return <ConfiguracionPanel clienteId={record.id} />;
 };
 
+// guardar y eliminar son de los datos generales; en la pestaña de
+// configuracion no salen, alli cada modulo tiene su propio guardar
+const BarraEdicion = () => {
+  const { pathname } = useLocation();
+  if (pathname.endsWith("/configuracion")) return null;
+  return (
+    <Toolbar sx={{ justifyContent: "space-between" }}>
+      <SaveButton icon={null} />
+      <EliminarClienteDefinitivo />
+    </Toolbar>
+  );
+};
+
 export const ClienteEdit = () => (
   <Edit>
-    <TabbedForm>
+    <TabbedForm toolbar={<BarraEdicion />}>
       <TabbedForm.Tab label="Datos generales">
         <TextField source="id" />
         <TextInput source="nombre_cliente" label="Nombre" validate={required()} />
@@ -47,7 +67,7 @@ export const ClienteEdit = () => (
       {/* esta pestaña no usa los campos normales del formulario, guarda
       directamente contra /clientes/:id/configuracion desde dentro de
       ConfiguracionPanel, con su propio boton de guardar por modulo */}
-      <TabbedForm.Tab label="Configuracion">
+      <TabbedForm.Tab label="Configuracion" path="configuracion">
         <PestanaConfiguracion />
       </TabbedForm.Tab>
     </TabbedForm>
