@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import type { CategoriaPanel, ModuloPanel, RespuestaConfigSchema } from "./tipos";
@@ -174,6 +174,9 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   const [valoresDeReferencia, setValoresDeReferencia] = useState<Record<string, unknown>>({});
   const [configuracion, setConfiguracion] = useState<Record<string, unknown>>({});
   const [moduloActivo, setModuloActivo] = useState<ModuloPanel | null>(null);
+  // en pantalla estrecha el formulario va debajo del menu: al elegir un
+  // modulo se baja hasta el (el mismo ancho que la regla de index.css)
+  const refFormulario = useRef<HTMLDivElement>(null);
   // la categoria desplegada del menu: solo una a la vez, para que el menu
   // no crezca; al entrar estan todas cerradas
   const [categoriaAbierta, setCategoriaAbierta] = useState<string | null>(null);
@@ -352,6 +355,9 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
                           setDatosEnEdicion(leerValorEnRuta(configuracion, modulo));
                           setRestaurados(new Set());
                           setMensaje(null);
+                          if (window.matchMedia("(max-width: 899px)").matches) {
+                            requestAnimationFrame(() => refFormulario.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+                          }
                         }}
                       >
                         {modulo.nombre}
@@ -366,7 +372,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
       </nav>
 
       {/* formulario del modulo seleccionado */}
-      <div className="config-formulario">
+      <div className="config-formulario" ref={refFormulario}>
         {!moduloActivo && <p className="config-vacio">elige una seccion del menu para empezar</p>}
 
         {moduloActivo?.aviso && (

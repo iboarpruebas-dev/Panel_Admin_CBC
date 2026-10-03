@@ -163,6 +163,42 @@ body {
   padding-right: 8px;
 }
 
+/* en pantallas estrechas el menu de categorias va encima del formulario,
+   con su propio desplazamiento, y el formulario ocupa todo el ancho y se
+   desplaza con la pagina (la barra de guardar sigue pegada abajo). el
+   margen de arriba es para que, al bajar hasta el, no quede debajo de la
+   barra de react-admin */
+@media (max-width: 899px) {
+  .config-disposicion {
+    flex-direction: column;
+  }
+
+  .config-menu {
+    flex: none;
+    width: 100%;
+    max-height: 40svh;
+    padding-right: 0;
+    padding-bottom: 8px;
+    border-right: none;
+    border-bottom: 1px solid var(--borde-suave);
+  }
+
+  .config-formulario {
+    width: 100%;
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+    scroll-margin-top: 72px;
+  }
+
+  /* la tarjeta de react-admin que envuelve el editor recorta con
+     overflow hidden, y eso no deja que la barra de guardar se pegue a la
+     pantalla; clip sigue recortando las esquinas pero no lo impide */
+  .MuiPaper-root:has(.config-disposicion) {
+    overflow: clip;
+  }
+}
+
 .config-cabecera {
   display: flex;
   align-items: baseline;
