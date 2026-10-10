@@ -1,11 +1,5 @@
-// los widgets del panel principal no pueden llevar su valor original
-// dentro del schema del backend (un widget que un cliente no declara no
-// se dibuja), asi que llega aparte, en valoresDeReferencia, con la ruta
-// completa como clave: "panel.totalScansCard.width" -> 230
-//
-// aqui se le pone a cada campo como valor por defecto del formulario, y
-// asi su casilla sale rellena y con "volver al original" como la de
-// cualquier otro campo; soloLoCambiado no guarda lo que no se toca
+// pone como valor por defecto de cada campo de widget el de valoresDeReferencia ("panel.totalScansCard.width" -> 230),
+// que no va en el schema del backend, asi su casilla sale rellena y con volver al original como las demas
 
 const esObjeto = (v: unknown): v is Record<string, unknown> =>
   v !== null && typeof v === "object" && !Array.isArray(v);

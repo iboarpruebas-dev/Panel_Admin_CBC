@@ -1,12 +1,6 @@
-// lee del texto de ayuda de un campo que pasa si se deja vacio, escrito al
-// final igual que el valor por defecto
-//
-//   (vacio: automatico, se calcula a partir del alto)
-//   (vacio: sigue a tema.grey100Light, el gris 100 del tema)
-//
-// la segunda forma apunta a otro campo de la configuracion: vacio vale lo
-// que valga ese, y quien lo lea tiene que ir a buscarlo para ensenar el
-// valor de verdad y no el nombre del campo
+// lee del texto de ayuda de un campo que pasa si se deja vacio: "(vacio: automatico, ...)" o "(vacio: sigue a
+// tema.grey100Light, ...)", en la segunda vale lo que valga ese otro campo y hay que ir a buscarlo
+
 export interface Vacio {
   valor: string;
   explicacion?: string;

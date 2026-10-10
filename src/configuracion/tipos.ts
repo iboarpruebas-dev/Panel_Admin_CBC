@@ -1,5 +1,4 @@
-// mismos tipos que panelNavegacion.ts en el backend, para que el
-// frontend sepa que forma tiene lo que le llega de /config-schema
+// tipos de lo que llega de /config-schema, los mismos que panelNavegacion.ts del backend
 
 export interface ModuloPanel {
   id: string;
@@ -20,8 +19,7 @@ export interface CategoriaPanel {
 export interface RespuestaConfigSchema {
   jsonSchema: Record<string, unknown>;
   categorias: CategoriaPanel[];
-  // el valor que usa la aplicacion en los campos que el schema deja
-  // opcionales a proposito (los widgets del panel principal), con la
-  // ruta completa como clave: "panel.totalScansCard.width"
+  // el valor que usa la aplicacion en los widgets del panel principal, que el schema deja opcionales a proposito,
+  // con la ruta completa como clave ("panel.totalScansCard.width")
   valoresDeReferencia?: Record<string, unknown>;
 }

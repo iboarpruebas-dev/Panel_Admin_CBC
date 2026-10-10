@@ -1,12 +1,10 @@
+// panel de administracion (react-admin) con las pantallas de clientes y usuarios, solo para el superadmin
+
 import { Admin, Resource } from "react-admin";
 import { authProvider } from "./providers/authProvider";
 import { dataProvider } from "./providers/dataProvider";
 import { ClienteList, ClienteEdit, ClienteCreate } from "./clientes/ClientePanel";
 import { UserList, UserEdit, UserCreate } from "./users/UserPanel";
-
-// punto de entrada del panel, solo clientes y usuarios por ahora, las
-// pantallas de aerolineas y permisos quedan pendientes de confirmar con
-// gilberto antes de construirlas
 
 export default function App() {
   return (

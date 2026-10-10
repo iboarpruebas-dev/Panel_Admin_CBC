@@ -1,8 +1,8 @@
+// saca del json schema completo el trozo de un modulo del panel, con todas sus referencias resueltas
+
 import type { ModuloPanel } from "./tipos";
 
-// si "nodo" es una referencia ($ref) a otro punto del documento, la
-// resuelve y devuelve el objeto real al que apunta, si no es una
-// referencia, la devuelve tal cual
+// si nodo es un $ref a otro punto del documento devuelve el objeto al que apunta, si no lo devuelve tal cual
 function resolverSiEsReferencia(
   nodo: Record<string, unknown>,
   raiz: Record<string, unknown>
@@ -18,15 +18,8 @@ function resolverSiEsReferencia(
   return actual ?? nodo;
 }
 
-// recorre un trozo de schema entero, a cualquier profundidad, y resuelve
-// toda referencia ($ref) que encuentre por el camino -- zod-to-json-schema
-// deduplica cualquier pieza que se repita exactamente igual en dos
-// sitios del documento (desde un widget completo hasta un simple
-// "boolean" usado varias veces), sustituyendola por una referencia al
-// primer sitio donde aparecio, sin resolver estas referencias en
-// profundidad, cualquier campo que sea "la segunda vez que aparece"
-// ese tipo se queda sin su definicion real, y el formulario no sabe
-// como mostrarlo
+// resuelve los $ref a cualquier profundidad: zod-to-json-schema puede cambiar por una referencia un trozo repetido
+// (de un widget entero a un simple boolean) y sin resolverlos el formulario no sabe pintar esos campos
 function resolverReferenciasProfundo(nodo: unknown, raiz: Record<string, unknown>): unknown {
   if (Array.isArray(nodo)) {
     return nodo.map((elemento) => resolverReferenciasProfundo(elemento, raiz));
@@ -45,17 +38,8 @@ function resolverReferenciasProfundo(nodo: unknown, raiz: Record<string, unknown
   return resultado;
 }
 
-// saca, del schema completo ya convertido, solo el trozo que corresponde
-// a un modulo concreto, siguiendo su rutaSchema (ej ["dashboard",
-// "totalScansCard"]) paso a paso, si el modulo no especifica "campos",
-// usa el objeto entero al final de la ruta, si especifica "campos", se
-// queda solo con esas propiedades dentro de ese objeto (para los objetos
-// grandes que se dividen en varios modulos, como los widgets del
-// dashboard)
-//
-// importante: todo el resultado pasa por resolverReferenciasProfundo
-// antes de devolverse, para que ninguna referencia interna (a cualquier
-// profundidad) quede sin resolver
+// el trozo de un modulo siguiendo su rutaSchema paso a paso: el objeto entero o, con campos, solo esas
+// propiedades (objetos grandes repartidos en varios modulos), todo con las referencias resueltas
 export function extraerSchemaModulo(
   jsonSchemaCompleto: Record<string, unknown>,
   modulo: ModuloPanel
@@ -95,10 +79,7 @@ export function extraerSchemaModulo(
       }
     }
 
-    // el "required" original puede exigir un campo (ej. "visible") que
-    // no esta en este sub-grupo concreto, eso deja un schema
-    // inconsistente, asi que solo se conservan los campos de "required"
-    // que de verdad estan presentes en las propiedades ya filtradas
+    // el required original puede pedir un campo que no esta en este modulo, asi que solo quedan los que si estan
     const requeridoOriginal = (nodoActual.required as string[] | undefined) ?? [];
     const requeridoFiltrado = requeridoOriginal.filter((campo) => campo in propiedadesFiltradas);
 

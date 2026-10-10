@@ -1,9 +1,8 @@
+// login del panel contra /user (login, logout y profile) con la cookie httpOnly del backend, sin guardar
+// ningun token en el navegador, solo deja entrar al superadmin
+
 import type { AuthProvider } from "react-admin";
 import { URL_BASE } from "./urlBase";
-
-// conecta con tu sistema de login real (/user/login, /user/logout,
-// /user/profile), usa la cookie httpOnly que ya existe, nunca guarda
-// ningun token a mano en el navegador
 
 export const authProvider: AuthProvider = {
   login: async ({ username, password }) => {
@@ -20,8 +19,7 @@ export const authProvider: AuthProvider = {
 
     const datos = await respuesta.json();
 
-    // el panel es solo para superadmin, si alguien con otro rol consigue
-    // iniciar sesion se le rechaza aqui mismo, antes de entrar
+    // el panel es solo para el superadmin, otro rol se rechaza aqui mismo y se cierra su sesion
     if (datos.user?.rol !== "superadmin") {
       await fetch(`${URL_BASE}/user/logout`, { method: "POST", credentials: "include" });
       throw new Error("este panel es solo para administradores");

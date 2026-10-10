@@ -1,3 +1,6 @@
+// pestaña de configuracion de un cliente: menu de categorias y modulos y un formulario por modulo, generado
+// del schema de zod que manda el backend (/config-schema), cada modulo se guarda por separado
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
@@ -20,14 +23,8 @@ interface Props {
   clienteId: string | number;
 }
 
-// lee, dentro de la configuracion completa, el valor que hay en el punto
-// exacto que indica una ruta (ej ["dashboard", "totalScansCard"]), si
-// algun tramo de la ruta no existe todavia, devuelve un objeto vacio.
-// si el modulo especifica "campos" (los sub-grupos, ej. solo el logo
-// dentro de navbar), se queda solo con esos campos -- tiene que
-// coincidir exactamente con lo que hace extraerSchemaModulo.ts para el
-// schema, si no, el formulario recibe datos que no declara en su propio
-// schema y no sabe como mostrarlos
+// el valor guardado en la ruta del modulo (vacio si algun tramo no existe) y, si el modulo tiene campos, solo esos:
+// tiene que coincidir con extraerSchemaModulo.ts o el formulario recibe datos que su schema no declara
 function leerValorEnRuta(configuracion: Record<string, unknown>, modulo: ModuloPanel): Record<string, unknown> {
   let actual: unknown = configuracion;
   for (const clave of modulo.rutaSchema) {
@@ -49,9 +46,7 @@ function leerValorEnRuta(configuracion: Record<string, unknown>, modulo: ModuloP
   return valorFiltrado;
 }
 
-// cuenta cuantos campos del modulo tiene guardados este cliente, y
-// cuantos hay en total -- sirve para decir de un vistazo cuanto de este
-// apartado esta personalizado y cuanto viene tal cual del valor original
+// cuantos campos del modulo tiene guardados el cliente y cuantos hay, para ver de un vistazo cuanto esta personalizado
 function contarCampos(
   esquemaModulo: Record<string, unknown>,
   guardado: Record<string, unknown>
@@ -79,13 +74,8 @@ function contarCampos(
   return { total, guardados };
 }
 
-// coloca un valor nuevo en el punto exacto que indica una ruta, dentro
-// de una copia de la configuracion (nunca modifica el objeto original),
-// combinandolo con lo que ya hubiera en ese punto -- imprescindible
-// porque varios modulos pueden compartir la misma ruta, diferenciados
-// solo por "campos" (ej. los 7 sub-grupos de un mismo widget), sin esta
-// combinacion, reflejar el guardado de uno borraria los demas en
-// pantalla
+// pone el valor en la ruta sobre una copia, sumandolo a lo que habia: varios modulos comparten ruta y se distinguen
+// por sus campos, sustituir borraria los demas en pantalla
 function establecerValorEnRuta(
   configuracion: Record<string, unknown>,
   ruta: string[],
@@ -133,14 +123,8 @@ function quitarEnRuta(configuracion: Record<string, unknown>, ruta: string[], bo
   return resultado;
 }
 
-// dice por que ha fallado el guardado en vez de echarle la culpa a los
-// datos siempre: la sesion caducada y un campo mal puesto se arreglan de
-// formas distintas, y con un unico mensaje no hay manera de saber cual de
-// las dos es
-//
-// el panel y la aplicacion comparten la cookie de localhost, asi que
-// entrar en una cierra la sesion de la otra: es un 403 con los datos
-// perfectamente bien
+// dice por que ha fallado el guardado, la sesion caducada y un campo mal puesto se arreglan distinto, y el panel y
+// la aplicacion comparten la cookie de localhost, asi que entrar en una cierra la otra (un 403 con los datos bien)
 async function explicarFallo(respuesta: Response): Promise<string> {
   if (respuesta.status === 401) {
     return "error: se ha cerrado la sesion, vuelve a entrar y repite el cambio";
@@ -164,10 +148,6 @@ async function explicarFallo(respuesta: Response): Promise<string> {
   return `error al guardar (${respuesta.status})${detalle}`;
 }
 
-// panel de configuracion de un cliente, dividido en categorias y modulos
-// (menu lateral) en vez de un unico JSON gigante. cada modulo genera su
-// propio formulario a partir del schema real de Zod, convertido por el
-// backend, nunca se edita JSON a mano en ningun punto de este componente
 export default function ConfiguracionPanel({ clienteId }: Props) {
   const [categorias, setCategorias] = useState<CategoriaPanel[]>([]);
   const [jsonSchema, setJsonSchema] = useState<Record<string, unknown> | null>(null);
@@ -177,12 +157,9 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   // en pantalla estrecha el formulario va debajo del menu: al elegir un
   // modulo se baja hasta el (el mismo ancho que la regla de index.css)
   const refFormulario = useRef<HTMLDivElement>(null);
-  // la categoria desplegada del menu: solo una a la vez, para que el menu
-  // no crezca; al entrar estan todas cerradas
+  // la categoria desplegada del menu, solo una a la vez para que no crezca, al entrar estan todas cerradas
   const [categoriaAbierta, setCategoriaAbierta] = useState<string | null>(null);
-  // valores del formulario mientras se editan, separado de "configuracion"
-  // (que es lo ya guardado) -- se actualiza en cada cambio via onChange,
-  // nunca al enviar un formulario nativo
+  // valores del formulario mientras se editan, aparte de configuracion (lo guardado), se actualizan en cada onChange
   const [datosEnEdicion, setDatosEnEdicion] = useState<Record<string, unknown>>({});
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -219,9 +196,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   async function guardarModulo() {
     if (!moduloActivo || !esquemaModulo) return;
 
-    // no se manda el formulario entero: react-jsonschema-form rellena
-    // solo los campos con valor por defecto, y guardarlos fijaria en la
-    // fila del cliente valores que nadie ha escrito
+    // solo lo cambiado, el formulario trae rellenos los campos con valor por defecto (soloLoCambiado.ts)
     const { valor: aGuardar, borrar } = soloLoCambiado(
       datosEnEdicion,
       leerValorEnRuta(configuracion, moduloActivo),
@@ -237,9 +212,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     setGuardando(true);
     setMensaje(null);
 
-    // se manda la ruta completa del modulo, el backend coloca este
-    // valor en ese punto exacto de la configuracion ya existente, sin
-    // tocar nada mas de ella
+    // con la ruta completa del modulo el backend pone el valor en ese punto sin tocar el resto
     const respuesta = await fetch(`${URL_BASE}/clientes/${clienteId}/configuracion`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -263,9 +236,8 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     setMensaje({ texto: "guardado correctamente", error: false });
   }
 
-  // el schema del modulo activo y su recuento de campos se calculan una
-  // sola vez por modulo, no en cada tecla que se pulse en el formulario;
-  // lleva ya como valor por defecto el de referencia de los widgets
+  // el schema del modulo y su recuento se calculan una vez por modulo y no en cada tecla, con el valor de referencia
+  // de los widgets ya puesto como valor por defecto
   const esquemaModulo = useMemo(
     () =>
       jsonSchema && moduloActivo && !moduloActivo.aviso
@@ -298,14 +270,8 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     [esquemaModulo, moduloActivo, configuracion]
   );
 
-  // lo que necesitan las plantillas para distinguir un valor que este
-  // cliente guardo de uno que solo se ve porque es el valor original --
-  // se les pasa ya el trozo guardado de este modulo, asi que las rutas de
-  // los campos cuelgan directamente de ahi y rutaModulo va vacia
-  // los valores de referencia vienen con la ruta completa como clave
-  // ("panel.totalScansCard.width"), y las rutas que da el formulario son
-  // relativas al modulo, asi que se le pasa la ruta del modulo para que
-  // pueda reconstruir la clave
+  // lo que necesitan las plantillas para distinguir lo guardado de lo que solo se ve por ser el original: el trozo
+  // guardado del modulo y su ruta, para rehacer la clave completa de los valores de referencia
   const contexto: ContextoConfig | undefined = moduloActivo
     ? {
         rutaModulo: moduloActivo.rutaSchema,
@@ -396,15 +362,8 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
                 {recuento.guardados === 1 ? "lo tiene guardado" : "los tiene guardados"} este cliente
               </p>
             )}
-            {/* tagName="div": react-admin ya envuelve toda la pestaña en
-            su propio <form>, sin esto, react-jsonschema-form pondria
-            otro <form> dentro, HTML no permite formularios anidados.
-            onChange en vez de onSubmit: un boton de "enviar" dentro de
-            aqui, sin su propio <form>, terminaria disparando el <form>
-            de react-admin por fuera (el que guarda nombre_cliente/
-            activo), no el guardado de este modulo -- en su lugar, cada
-            cambio se guarda en memoria, y el boton de abajo (uno normal,
-            fuera de este componente) es quien dispara el guardado real */}
+            {/* tagName div: react-admin ya envuelve la pestaña en su <form> y no se pueden anidar, y onChange en vez de onSubmit
+            porque un boton de enviar aqui dispararia el form de react-admin, el guardado va con el boton de abajo */}
             <Form
               tagName="div"
               schema={esquemaModulo}

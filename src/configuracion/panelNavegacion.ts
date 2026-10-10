@@ -1,16 +1,4 @@
-// mapa de navegacion del panel de configuracion (react-admin), no valida
-// nada (eso lo sigue haciendo clientConfigSchema, sin tocar), solo le
-// dice al frontend como trocear el formulario en categorias y modulos
-// mas pequeños, y a que ruta de clientConfigSchema pertenece cada uno
-//
-// "rutaSchema": camino de claves dentro de clientConfigSchema hasta
-// llegar al objeto que este modulo edita, ej ["reglas"] para un campo de
-// primer nivel, o ["dashboard", "totalScansCard"] para un widget
-// concreto dentro de dashboard
-//
-// "campos": si no se especifica, el modulo muestra todos los campos del
-// objeto al que apunta rutaSchema, si se especifica, muestra solo esos
-// campos, para los objetos grandes que se dividen en varios modulos
+// copia antigua del mapa del panel (el de verdad lo manda el backend en /config-schema), no la importa nadie
 
 export interface ModuloPanel {
   id: string;
@@ -25,12 +13,7 @@ export interface CategoriaPanel {
   modulos: ModuloPanel[];
 }
 
-// los widgets del panel y de varias graficas comparten siempre la misma
-// forma (baseComponentSchema + chartExtrasSchema en componentConfigSchema.ts),
-// asi que se dividen siempre en los mismos 7 sub-grupos. esta funcion
-// genera esos 7 modulos para un widget concreto, dada su ruta dentro del
-// schema y su nombre para mostrar, en vez de repetir las mismas listas de
-// campos a mano en cada widget
+// los widgets se reparten siempre en los mismos 7 modulos, en vez de repetir las listas de campos en cada uno
 function generarModulosWidget(rutaBase: string[], etiquetaWidget: string, prefijoId: string): ModuloPanel[] {
   return [
     {
@@ -93,12 +76,7 @@ function generarModulosWidget(rutaBase: string[], etiquetaWidget: string, prefij
   ];
 }
 
-// categoria 1: navegacion y estructura general, presente en todas las
-// paginas de la app. navbar y sidebar se dividen en varios modulos cada
-// uno porque tienen muchos campos sin relacion directa entre si (el
-// logo no tiene nada que ver con los tooltips del menu de idioma, por
-// ejemplo). theme, dashboardLayout y scrollToTopButton son pequeños,
-// se quedan como un unico modulo cada uno
+// navegacion y estructura general, navbar y sidebar en varios modulos y el resto en uno cada uno
 const categoriaNavegacion: CategoriaPanel = {
   id: "navegacion-estructura",
   nombre: "Navegacion y estructura general",
@@ -170,9 +148,7 @@ const categoriaNavegacion: CategoriaPanel = {
   ],
 };
 
-// categoria 2: panel principal (dashboard), la cabecera de la pagina
-// mas los 8 widgets, cada uno dividido en sus 7 sub-grupos estandar via
-// generarModulosWidget
+// panel principal: la cabecera y los 8 widgets
 const categoriaDashboard: CategoriaPanel = {
   id: "panel-principal",
   nombre: "Panel principal (Dashboard)",
@@ -202,8 +178,7 @@ export const navegacionPanel: CategoriaPanel[] = [
         id: "reglas-cache",
         nombre: "Actualizacion de cache",
         rutaSchema: ["reglas"],
-        // sin "campos", muestra los 3 campos de reglasSchema completos
-        // (cacheRefreshHour, cacheRefreshMinute, cacheRefreshTimezone)
+        // sin campos, enseña todo el apartado reglas
       },
     ],
   },

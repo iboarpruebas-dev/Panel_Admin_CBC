@@ -1,3 +1,6 @@
+// plantillas de dibujado del formulario de configuracion: jerarquia de etiqueta, ayuda y casilla, y sobre todo
+// el valor original de cada campo al lado, para poder volver a el sin ir al codigo
+
 import { useState } from "react";
 import type {
   ArrayFieldItemTemplateProps,
@@ -6,19 +9,6 @@ import type {
   ObjectFieldTemplateProps,
 } from "@rjsf/utils";
 import { leerVacio } from "./leerVacio";
-
-// plantillas de dibujado del formulario de configuracion
-//
-// el formulario que sale de react-jsonschema-form sin tocar nada no sirve
-// para este trabajo: pone la etiqueta, el texto de ayuda y la casilla uno
-// debajo de otro sin jerarquia, y sobre todo no enseña por ningun lado
-// cual era el valor original del campo
-//
-// eso ultimo es lo importante: quien entra aqui cambia un valor, y si
-// luego se arrepiente tiene que poder dejarlo como estaba sin ir a buscar
-// el codigo. el valor original viaja en el propio schema, en la propiedad
-// "default", asi que se lee de ahi y se enseña siempre, al lado del campo
-// -- no se depende de que el texto de ayuda lo mencione
 
 // el mismo formato que usa el backend al escribir los textos de ayuda,
 // para que un campo diga lo mismo en los dos sitios
@@ -37,32 +27,24 @@ function sonIguales(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-// lo que el panel le pasa a las plantillas para que puedan distinguir un
-// valor que este cliente guardo de uno que solo esta puesto porque es el
-// valor por defecto -- son indistinguibles mirando el formulario, los dos
-// salen escritos en la casilla
+// lo que el panel pasa a las plantillas para distinguir un valor que el cliente guardo de uno que solo se ve
+// por ser el valor por defecto, en la casilla salen igual
 export interface ContextoConfig {
-  // ruta del modulo dentro de la configuracion completa, solo para
-  // reconstruir la clave de los valores de referencia -- lo que hay en
-  // configuracionGuardada ya es el trozo de este modulo, asi que para
-  // mirar ahi no hace falta
+  // ruta del modulo, solo para rehacer la clave de los valores de referencia (configuracionGuardada ya es su trozo)
   rutaModulo: string[];
   configuracionGuardada: Record<string, unknown>;
   // valor que usa la aplicacion en los campos que el schema deja
   // opcionales a proposito, indexado por su ruta completa
   valoresDeReferencia: Record<string, unknown>;
-  // valor que tiene ahora otro campo de la configuracion de este cliente,
-  // el guardado o si no su valor por defecto: lo usan los campos que
-  // vacios siguen a otro, como un color que sigue a un gris del tema
+  // lo que vale ahora otro campo (guardado o por defecto), para los que vacios siguen a otro, como un color
+  // que sigue a un gris del tema
   resolverReferencia: (ruta: string) => unknown;
   // apunta que un campo se ha devuelto al original con el boton, para que
   // al guardar se quite en vez de escribir encima su valor de hoy
   marcarRestaurado: (ruta: string) => void;
 }
 
-// mira si este cliente tiene guardado algo en esa ruta exacta, la
-// ausencia es lo normal: una configuracion escueta es una configuracion
-// que se conforma con los valores por defecto
+// si el cliente tiene algo guardado en esa ruta, lo normal es que no: una configuracion escueta usa los valores por defecto
 function estaGuardado(contexto: ContextoConfig | undefined, rutaCampo: (string | number)[]): boolean {
   if (!contexto) return false;
   let actual: unknown = contexto.configuracionGuardada;
@@ -76,25 +58,21 @@ function estaGuardado(contexto: ContextoConfig | undefined, rutaCampo: (string |
 
 export function PlantillaCampo(props: FieldTemplateProps) {
   const { id, label, description, children, errors, help, hidden, required, schema, displayLabel, formData, onChange, fieldPathId, registry } = props;
-  // la casilla numerica recuerda lo que se escribio y, si es el original
-  // con ceros detras (100 con original 1), lo sigue mostrando, asi que al
-  // volver al original se dibuja la casilla de nuevo
+  // la casilla numerica recuerda lo escrito y, si es el original con ceros detras (100 con original 1), lo sigue
+  // enseñando, asi que al volver al original se vuelve a dibujar
   const [vueltas, setVueltas] = useState(0);
 
   if (hidden) {
     return <div style={{ display: "none" }}>{children}</div>;
   }
 
-  // un objeto anidado no es un campo, es un grupo: lo dibuja
-  // PlantillaObjeto, aqui solo se deja pasar para no meterle una
-  // etiqueta y un pie que no le corresponden
+  // un objeto anidado es un grupo y lo dibuja PlantillaObjeto, aqui solo se deja pasar sin etiqueta ni pie
   if (schema.type === "object") {
     return <div className="campo-grupo">{children}</div>;
   }
 
-  // cada elemento de una lista (cada numero de pageSizeOptions) no es un
-  // campo suelto: el nombre, el valor original y el boton de volver son
-  // de la lista entera, asi que aqui solo va su casilla
+  // un elemento de una lista (cada numero de pageSizeOptions) solo lleva su casilla, el nombre, el original
+  // y el boton de volver son de la lista
   if (typeof fieldPathId.path[fieldPathId.path.length - 1] === "number") {
     return <div className="lista-casilla">{children}{errors}</div>;
   }
@@ -102,11 +80,8 @@ export function PlantillaCampo(props: FieldTemplateProps) {
   const contexto = registry.formContext as ContextoConfig | undefined;
   const guardado = estaGuardado(contexto, fieldPathId.path);
 
-  // el valor original sale del schema si lo lleva, y si no, del que usa
-  // la aplicacion -- son dos cosas distintas y se dicen distinto: un
-  // default del schema es el valor que sale solo cuando el campo falta,
-  // y un valor de referencia es el que usa la aplicacion en un campo
-  // que hoy no esta declarado, asi que ponerlo es declararlo
+  // el original sale del default del schema o, si no lo hay, del valor que usa la aplicacion, y se dicen distinto:
+  // el default sale solo si el campo falta, pero poner el de referencia es declarar un campo que no lo estaba
   const tieneDefecto = Object.prototype.hasOwnProperty.call(schema, "default");
   const rutaCompleta = [...(contexto?.rutaModulo ?? []), ...fieldPathId.path].join(".");
   const referencia = contexto?.valoresDeReferencia?.[rutaCompleta];
@@ -116,8 +91,7 @@ export function PlantillaCampo(props: FieldTemplateProps) {
   const hayOriginal = tieneDefecto || tieneReferencia;
   const cambiado = hayOriginal && !sonIguales(formData, valorDefecto);
 
-  // un campo sin valor original puede decir en su texto que significa
-  // dejarlo vacio; si apunta a otro campo, se ensena lo que vale ese
+  // un campo sin original puede decir en su texto que significa vacio, y si apunta a otro campo se enseña lo que vale ese
   const vacio = hayOriginal ? null : leerVacio(schema.description);
   const valorVacio = vacio?.referencia
     ? formatearValor(contexto?.resolverReferencia(vacio.referencia))
@@ -198,10 +172,8 @@ export function PlantillaCampo(props: FieldTemplateProps) {
   );
 }
 
-// un objeto dentro del formulario (ej. serviceLogo dentro de la barra
-// superior) se dibuja como un bloque con su titulo, para que se vea donde
-// empieza y donde acaba en vez de quedar sus campos mezclados con los del
-// nivel de arriba
+// un objeto dentro del formulario (p. ej. serviceLogo en la barra superior) va en un bloque con su titulo,
+// para que sus campos no se mezclen con los del nivel de arriba
 export function PlantillaObjeto(props: ObjectFieldTemplateProps) {
   const { title, description, properties, fieldPathId } = props;
   // el objeto raiz del modulo no lleva titulo: el nombre del modulo ya
@@ -230,9 +202,8 @@ export function PlantillaObjeto(props: ObjectFieldTemplateProps) {
   );
 }
 
-// una lista de valores (como las opciones de filas por pagina): el nombre,
-// la ayuda y el valor original ya los pone PlantillaCampo alrededor, asi
-// que aqui solo van sus elementos, uno por linea, y el boton de añadir
+// una lista de valores (como las opciones de filas por pagina): nombre, ayuda y original los pone PlantillaCampo,
+// aqui van sus elementos, uno por linea, y el boton de añadir
 export function PlantillaLista(props: ArrayFieldTemplateProps) {
   const { items, canAdd, onAddClick, disabled, readonly, fieldPathId } = props;
   return (

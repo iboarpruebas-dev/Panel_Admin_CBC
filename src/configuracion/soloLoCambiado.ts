@@ -1,17 +1,5 @@
-// separa de un modulo lo que hay que escribir y lo que hay que borrar
-//
-// react-jsonschema-form rellena solo los campos que el schema declara con
-// valor por defecto, asi que el formulario llega con valores que nadie ha
-// escrito, y guardarlos los dejaria fijados en la fila del cliente
-//
-// un campo que no se ha tocado no se toca nunca, aunque este guardado
-// con el mismo valor que su original: quitarlo seria un cambio que nadie
-// ha pedido. se borra solo lo que se devuelve al original con el boton, o
-// se vacia a mano, y se escribe lo que trae un valor propio distinto de
-// lo guardado
-//
-// volver al original es quitar lo que el cliente habia puesto, no
-// escribir encima el valor de hoy
+// separa de un modulo lo que hay que escribir y lo que hay que borrar: react-jsonschema-form rellena los campos
+// con valor por defecto y guardarlos los dejaria fijados en la fila del cliente
 
 function sonIguales(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -28,6 +16,8 @@ export interface Cambios {
   borrar: string[][];
 }
 
+// un campo sin tocar no se toca nunca, se borra lo que se devuelve al original con el boton o se vacia a mano
+// y se escribe lo que trae un valor propio distinto de lo guardado
 export function soloLoCambiado(
   datos: Record<string, unknown>,
   guardado: Record<string, unknown>,

@@ -1,14 +1,10 @@
+// uiSchema del formulario de un modulo: quita la etiqueta repetida de los booleanos y pone de placeholder
+// lo que vale un campo vacio
+
 import { leerVacio } from "./leerVacio";
 
-// el widget de casilla de verificacion de react-jsonschema-form dibuja
-// por su cuenta la descripcion del campo y la etiqueta al lado de la
-// casilla, asi que en un campo booleano el texto de ayuda salia dos
-// veces: una puesta por la plantilla de campo y otra por el propio widget
-//
-// el widget se calla las dos cosas cuando recibe "ui:label": false, asi
-// que se recorre el schema del modulo y se le pone esa marca a todos los
-// booleanos -- la plantilla de campo sigue poniendo la etiqueta, para que
-// un booleano se lea igual que los demas campos
+// la casilla de react-jsonschema-form dibuja su descripcion y su etiqueta y el texto saldria dos veces,
+// con "ui:label": false se calla y la etiqueta la pone la plantilla de campo, como en los demas
 
 export function construirUiSchema(
   esquema: Record<string, unknown>,

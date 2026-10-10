@@ -1,9 +1,4 @@
-/* estilos del panel de administracion
-   antes aqui estaba la hoja de ejemplo que trae vite al crear el
-   proyecto, sin tocar: centraba la aplicacion entera en una columna de
-   1126px con margen automatico a los lados, y ademas ponia todo el texto
-   centrado. de ahi venian el margen enorme de la izquierda y las
-   etiquetas del formulario alineadas al centro */
+/* estilos del panel de administracion: colores por modo y el editor de configuracion */
 
 :root {
   --texto: #d7d7db;
@@ -26,9 +21,8 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* los colores de arriba son los del modo oscuro; en modo claro el panel
-   de configuracion usa estos, los componentes de react-admin ya cambian
-   solos */
+/* los colores de arriba son los del modo oscuro, en modo claro el panel de configuracion usa estos
+   (los componentes de react-admin ya cambian solos) */
 .config-disposicion[data-modo="light"] {
   --texto: #33333a;
   --texto-suave: #6b6b76;
@@ -49,8 +43,7 @@ body {
   margin: 0;
 }
 
-/* a ancho completo y alineado a la izquierda, que es lo que react-admin
-   espera: el la barra lateral y la cabecera las pone el */
+/* a ancho completo y alineado a la izquierda, como espera react-admin, que pone la barra lateral y la cabecera */
 #root {
   width: 100%;
   margin: 0;
@@ -60,10 +53,8 @@ body {
 
 /* ---- panel de configuracion ---- */
 
-/* react-admin mete los campos de la pestaña dentro de un Stack con
-   align-items: flex-start, y eso encoge a lo ancho del contenido a
-   cualquier hijo que no pida lo contrario -- de ahi que el panel se
-   quedara en una columna estrecha con el resto del ancho desaprovechado */
+/* react-admin mete los campos de la pestaña en un Stack con align-items: flex-start, que encoge a lo ancho
+   del contenido a cualquier hijo que no pida lo contrario */
 .config-disposicion {
   display: flex;
   gap: 20px;
@@ -72,8 +63,7 @@ body {
   align-self: stretch;
 }
 
-/* el menu de las 18 categorias es largo, asi que se queda fijo y se
-   desplaza por su cuenta, sin arrastrar el formulario */
+/* el menu de categorias es largo, asi que queda fijo y se desplaza por su cuenta sin arrastrar el formulario */
 .config-menu {
   flex: 0 0 250px;
   max-height: calc(100svh - 210px);
@@ -163,11 +153,8 @@ body {
   padding-right: 8px;
 }
 
-/* en pantallas estrechas el menu de categorias va encima del formulario,
-   con su propio desplazamiento, y el formulario ocupa todo el ancho y se
-   desplaza con la pagina (la barra de guardar sigue pegada abajo). el
-   margen de arriba es para que, al bajar hasta el, no quede debajo de la
-   barra de react-admin */
+/* en pantallas estrechas el menu va encima del formulario con su propio desplazamiento y el formulario a todo el ancho,
+   el margen de arriba es para que al bajar hasta el no quede bajo la barra de react-admin */
 @media (max-width: 899px) {
   .config-disposicion {
     flex-direction: column;
@@ -191,9 +178,8 @@ body {
     scroll-margin-top: 72px;
   }
 
-  /* la tarjeta de react-admin que envuelve el editor recorta con
-     overflow hidden, y eso no deja que la barra de guardar se pegue a la
-     pantalla; clip sigue recortando las esquinas pero no lo impide */
+  /* la tarjeta de react-admin que envuelve el editor recorta con overflow hidden y no deja que la barra de guardar
+   se pegue a la pantalla, clip recorta igual las esquinas pero no lo impide */
   .MuiPaper-root:has(.config-disposicion) {
     overflow: clip;
   }
@@ -224,8 +210,7 @@ body {
   margin: 0 0 14px;
 }
 
-/* el texto de un modulo que no edita nada, solo explica algo; los
-   parrafos vienen separados por una linea en blanco */
+/* el texto de un modulo que no edita nada y solo explica algo, con los parrafos separados por una linea en blanco */
 .config-aviso {
   max-width: 70ch;
   margin: 8px 0 0;

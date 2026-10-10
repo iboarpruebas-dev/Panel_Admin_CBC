@@ -1,3 +1,5 @@
+// pantallas de usuarios del panel: listado, edicion y alta, borrar desde el panel solo desactiva
+
 import {
   List,
   Datagrid,
@@ -16,9 +18,6 @@ import {
   AutocompleteInput,
   required,
 } from "react-admin";
-
-// las 3 pantallas de gestion de usuarios, mismo patron que ClientePanel
-// el borrado tampoco es real aqui, desactiva (activo=false)
 
 const opcionesRol = [
   { id: "superadmin", name: "Superadmin" },

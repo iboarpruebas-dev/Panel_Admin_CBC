@@ -1,11 +1,9 @@
+// boton de eliminar del todo un cliente: enseña antes lo que se borra (sus usuarios y los informes de esos usuarios)
+// y pide otra vez la contraseña del superadmin, para desactivarlo esta el switch activo de la ficha
+
 import { useState } from "react";
 import { Button, Confirm, useNotify, useRecordContext, useRedirect, useTheme } from "react-admin";
 import { URL_BASE } from "../providers/urlBase";
-
-// borrar de verdad un cliente: enseña antes lo que se va a llevar por
-// delante (sus usuarios y los informes programados de esos usuarios) y
-// pide otra vez la contraseña del superadmin. para desactivarlo esta el
-// switch "activo" de la ficha
 
 interface Resumen {
   cliente: string;

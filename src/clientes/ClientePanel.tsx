@@ -1,3 +1,5 @@
+// pantallas de clientes del panel: listado, edicion (datos generales y configuracion) y alta
+
 import {
   List,
   Datagrid,
@@ -18,10 +20,8 @@ import {
 import ConfiguracionPanel from "../configuracion/ConfiguracionPanel";
 import EliminarClienteDefinitivo from "./EliminarClienteDefinitivo";
 
-// las 3 pantallas de gestion de clientes: listado, edicion, creacion
-// desactivar un cliente es el switch "activo" de la edicion; "eliminar",
-// en la barra de la edicion, lo borra de verdad con sus usuarios y sus
-// informes
+// desactivar un cliente es el switch activo de la edicion, eliminar (en la barra de la edicion) lo borra
+// de verdad con sus usuarios y sus informes
 
 export const ClienteList = () => (
   <List>
@@ -43,8 +43,7 @@ const PestanaConfiguracion = () => {
   return <ConfiguracionPanel clienteId={record.id} />;
 };
 
-// guardar y eliminar son de los datos generales; en la pestaña de
-// configuracion no salen, alli cada modulo tiene su propio guardar
+// guardar y eliminar son de los datos generales, en la pestaña de configuracion cada modulo tiene su guardar
 const BarraEdicion = () => {
   const { pathname } = useLocation();
   if (pathname.endsWith("/configuracion")) return null;
@@ -64,9 +63,8 @@ export const ClienteEdit = () => (
         <TextInput source="nombre_cliente" label="Nombre" validate={required()} />
         <BooleanInput source="activo" />
       </TabbedForm.Tab>
-      {/* esta pestaña no usa los campos normales del formulario, guarda
-      directamente contra /clientes/:id/configuracion desde dentro de
-      ConfiguracionPanel, con su propio boton de guardar por modulo */}
+      {/* esta pestaña no usa los campos del formulario: ConfiguracionPanel guarda cada modulo contra
+      /clientes/:id/configuracion con su propio boton */}
       <TabbedForm.Tab label="Configuracion" path="configuracion">
         <PestanaConfiguracion />
       </TabbedForm.Tab>
