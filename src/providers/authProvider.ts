@@ -11,6 +11,10 @@ async function leerPerfil(): Promise<{ id: number; nombre: string; rol: string }
   return respuesta.json();
 }
 
+async function cerrarSesion(): Promise<void> {
+  await fetch(`${URL_BASE}/user/logout`, { method: "POST", credentials: "include" });
+}
+
 export const authProvider: AuthProvider = {
   login: async ({ username, password }) => {
     const respuesta = await fetch(`${URL_BASE}/user/login`, {
@@ -28,18 +32,21 @@ export const authProvider: AuthProvider = {
 
     // el panel es solo para el superadmin, otro rol se rechaza aqui mismo y se cierra su sesion
     if (datos.user?.rol !== "superadmin") {
-      await fetch(`${URL_BASE}/user/logout`, { method: "POST", credentials: "include" });
+      await cerrarSesion();
       throw new Error("este panel es solo para administradores");
     }
   },
 
+  // la cookie es la misma que la del front: solo se cierra si es del superadmin, a un cliente se le manda
+  // al login del panel sin sacarle del front
   logout: async () => {
-    await fetch(`${URL_BASE}/user/logout`, { method: "POST", credentials: "include" });
+    const perfil = await leerPerfil();
+    if (perfil?.rol === "superadmin") await cerrarSesion();
   },
 
   checkAuth: async () => {
-    const respuesta = await fetch(`${URL_BASE}/user/profile`, { credentials: "include" });
-    if (!respuesta.ok) {
+    const perfil = await leerPerfil();
+    if (perfil?.rol !== "superadmin") {
       throw new Error("no autenticado");
     }
   },
