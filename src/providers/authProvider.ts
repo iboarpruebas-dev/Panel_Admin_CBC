@@ -4,6 +4,13 @@
 import type { AuthProvider } from "react-admin";
 import { URL_BASE } from "./urlBase";
 
+// /user/profile devuelve el usuario tal cual, el login lo envuelve en user
+async function leerPerfil(): Promise<{ id: number; nombre: string; rol: string } | null> {
+  const respuesta = await fetch(`${URL_BASE}/user/profile`, { credentials: "include" });
+  if (!respuesta.ok) return null;
+  return respuesta.json();
+}
+
 export const authProvider: AuthProvider = {
   login: async ({ username, password }) => {
     const respuesta = await fetch(`${URL_BASE}/user/login`, {
@@ -46,21 +53,15 @@ export const authProvider: AuthProvider = {
   },
 
   getIdentity: async () => {
-    const respuesta = await fetch(`${URL_BASE}/user/profile`, { credentials: "include" });
-    if (!respuesta.ok) {
+    const perfil = await leerPerfil();
+    if (!perfil) {
       throw new Error("no se pudo obtener el perfil");
     }
-    const datos = await respuesta.json();
-    return {
-      id: datos.user.id,
-      fullName: datos.user.nombre,
-    };
+    return { id: perfil.id, fullName: perfil.nombre };
   },
 
   getPermissions: async () => {
-    const respuesta = await fetch(`${URL_BASE}/user/profile`, { credentials: "include" });
-    if (!respuesta.ok) return null;
-    const datos = await respuesta.json();
-    return datos.user?.rol ?? null;
+    const perfil = await leerPerfil();
+    return perfil?.rol ?? null;
   },
 };
