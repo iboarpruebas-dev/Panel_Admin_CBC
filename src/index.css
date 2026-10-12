@@ -185,6 +185,21 @@ body {
   }
 }
 
+/* en pantallas estrechas la tabla que no cabe se desliza dentro de su tarjeta, sin esto react-admin ensancha la pagina
+   (en body para ganar a su estilo, que se carga despues) */
+@media (max-width: 899px) {
+  body .layout,
+  .RaLayout-content,
+  .list-page,
+  .RaList-main {
+    min-width: 0;
+  }
+
+  .RaDatagrid-tableWrapper {
+    overflow-x: auto;
+  }
+}
+
 .config-cabecera {
   display: flex;
   align-items: baseline;
