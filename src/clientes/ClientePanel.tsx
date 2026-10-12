@@ -55,8 +55,9 @@ const BarraEdicion = () => {
   );
 };
 
+// guardar espera a que el servidor conteste, si da error se queda en la ficha con lo escrito
 export const ClienteEdit = () => (
-  <Edit>
+  <Edit mutationMode="pessimistic">
     <TabbedForm toolbar={<BarraEdicion />}>
       <TabbedForm.Tab label="Datos generales">
         <TextField source="id" />

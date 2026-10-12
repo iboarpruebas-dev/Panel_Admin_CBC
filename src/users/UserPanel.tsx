@@ -16,6 +16,7 @@ import {
   BooleanInput,
   ReferenceInput,
   AutocompleteInput,
+  BulkDeleteButton,
   required,
 } from "react-admin";
 
@@ -26,7 +27,8 @@ const opcionesRol = [
 
 export const UserList = () => (
   <List>
-    <Datagrid rowClick="edit">
+    {/* desactivar en bloque pregunta antes y espera a que el servidor conteste, como el boton de la ficha */}
+    <Datagrid rowClick="edit" bulkActionButtons={<BulkDeleteButton mutationMode="pessimistic" />}>
       <TextField source="id" />
       <TextField source="nombre" />
       <SelectField source="rol" choices={opcionesRol} />
@@ -36,8 +38,9 @@ export const UserList = () => (
   </List>
 );
 
+// guardar y desactivar esperan a que el servidor conteste, si da error se queda en la ficha con lo escrito
 export const UserEdit = () => (
-  <Edit>
+  <Edit mutationMode="pessimistic">
     <SimpleForm>
       <TextField source="id" />
       <TextInput source="nombre" validate={required()} />
