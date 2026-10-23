@@ -282,6 +282,7 @@ body {
 
 .campo-control input[type="text"],
 .campo-control input[type="number"],
+.campo-control input[type="email"],
 .campo-control input:not([type]),
 .campo-control select,
 .campo-control textarea {
