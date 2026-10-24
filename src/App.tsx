@@ -8,7 +8,8 @@ import { UserList, UserEdit, UserCreate } from "./users/UserPanel";
 
 export default function App() {
   return (
-    <Admin authProvider={authProvider} dataProvider={dataProvider} title="Panel CBC">
+    // disableTelemetry: sin el aviso a los servidores de react-admin al abrir el panel
+    <Admin authProvider={authProvider} dataProvider={dataProvider} title="Panel CBC" disableTelemetry>
       <Resource
         name="clientes"
         list={ClienteList}
