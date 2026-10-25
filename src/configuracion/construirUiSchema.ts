@@ -17,6 +17,14 @@ export function construirUiSchema(
   for (const [clave, nodo] of Object.entries(propiedades)) {
     const sub = nodo as Record<string, unknown>;
     if (sub.type === "boolean") {
+      // una casilla que vacia sigue a otro campo no puede enseñar ese valor (saldria desmarcada aunque se aplique un si),
+      // asi que va como desplegable de si y no con lo que se aplica dentro, como los demas campos que siguen a otro
+      const sigueA = leerVacio(sub.description)?.referencia;
+      if (sigueA && resolverReferencia) {
+        const aplicado = resolverReferencia(sigueA);
+        ui[clave] = { "ui:widget": "SelectSiNo", "ui:options": { aplicado: aplicado === true ? "si" : aplicado === false ? "no" : "" } };
+        continue;
+      }
       ui[clave] = { "ui:label": false };
       continue;
     }

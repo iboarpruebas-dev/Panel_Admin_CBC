@@ -15,6 +15,7 @@ import {
   type ContextoConfig,
 } from "./PlantillaCampo";
 import { construirUiSchema } from "./construirUiSchema";
+import SelectSiNo from "./SelectSiNo";
 import { soloLoCambiado } from "./soloLoCambiado";
 import { conValoresDeReferencia } from "./conValoresDeReferencia";
 import { URL_BASE } from "../providers/urlBase";
@@ -379,6 +380,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
                 ArrayFieldItemTemplate: PlantillaElementoLista,
               }}
               formContext={contexto}
+              widgets={{ SelectSiNo }}
             >
               <div />
             </Form>
