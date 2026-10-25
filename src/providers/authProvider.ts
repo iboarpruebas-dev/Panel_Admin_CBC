@@ -15,6 +15,16 @@ async function cerrarSesion(): Promise<void> {
   await fetch(`${URL_BASE}/user/logout`, { method: "POST", credentials: "include" });
 }
 
+// error al entrar con el codigo del servidor (401, 403, 429...) o "rol" si el usuario no es superadmin, la entrada elige
+// el mensaje con el
+export class ErrorEntrada extends Error {
+  codigo: number | "rol";
+  constructor(codigo: number | "rol") {
+    super("no se ha podido entrar");
+    this.codigo = codigo;
+  }
+}
+
 export const authProvider: AuthProvider = {
   login: async ({ username, password }) => {
     const respuesta = await fetch(`${URL_BASE}/user/login`, {
@@ -25,7 +35,7 @@ export const authProvider: AuthProvider = {
     });
 
     if (!respuesta.ok) {
-      throw new Error("usuario o contraseña incorrectos");
+      throw new ErrorEntrada(respuesta.status);
     }
 
     const datos = await respuesta.json();
@@ -33,7 +43,7 @@ export const authProvider: AuthProvider = {
     // el panel es solo para el superadmin, otro rol se rechaza aqui mismo y se cierra su sesion
     if (datos.user?.rol !== "superadmin") {
       await cerrarSesion();
-      throw new Error("este panel es solo para administradores");
+      throw new ErrorEntrada("rol");
     }
   },
 
@@ -44,10 +54,11 @@ export const authProvider: AuthProvider = {
     if (perfil?.rol === "superadmin") await cerrarSesion();
   },
 
+  // sin sesion lleva a la entrada sin aviso, la entrada ya dice lo que hay que hacer
   checkAuth: async () => {
     const perfil = await leerPerfil();
     if (perfil?.rol !== "superadmin") {
-      throw new Error("no autenticado");
+      throw { message: false };
     }
   },
 

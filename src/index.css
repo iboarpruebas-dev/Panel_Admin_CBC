@@ -470,3 +470,96 @@ body {
 .config-mensaje-error {
   color: var(--error);
 }
+
+/* entrada al panel, la misma tarjeta que la de la pagina de mantenimiento, oscura salvo con el panel en modo claro */
+.entrada {
+  --entrada-fondo: #13171c;
+  --entrada-tarjeta: #1b2027;
+  --entrada-borde: #2d343d;
+  --entrada-texto: #e4e8ec;
+  --entrada-suave: #9aa4ae;
+  --entrada-acento: #6c9df0;
+  --entrada-acento-texto: #0d1117;
+  --entrada-error: #ef8a8a;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: var(--entrada-fondo);
+  color: var(--entrada-texto);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.entrada[data-modo="light"] {
+  --entrada-fondo: #f4f6f9;
+  --entrada-tarjeta: #ffffff;
+  --entrada-borde: #dde2e8;
+  --entrada-texto: #1c232b;
+  --entrada-suave: #67717c;
+  --entrada-acento: #1f5fbf;
+  --entrada-acento-texto: #ffffff;
+  --entrada-error: #c62828;
+}
+
+.entrada-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(360px, 100%);
+  box-sizing: border-box;
+  padding: 24px;
+  background: var(--entrada-tarjeta);
+  border: 1px solid var(--entrada-borde);
+  border-radius: 12px;
+}
+
+.entrada-tarjeta h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.entrada-tarjeta p {
+  margin: 0 0 4px;
+}
+
+.entrada-suave {
+  color: var(--entrada-suave);
+}
+
+.entrada-error {
+  color: var(--entrada-error);
+}
+
+.entrada-tarjeta label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.entrada-tarjeta input {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--entrada-borde);
+  border-radius: 8px;
+  background: var(--entrada-tarjeta);
+  color: var(--entrada-texto);
+}
+
+.entrada-tarjeta button {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 14px;
+  border: 1px solid var(--entrada-acento);
+  border-radius: 8px;
+  background: var(--entrada-acento);
+  color: var(--entrada-acento-texto);
+  cursor: pointer;
+}
+
+.entrada-tarjeta button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
