@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useLogin, useTheme } from "react-admin";
 import { ErrorEntrada } from "./providers/authProvider";
+import logoIboardings from "./assets/logoIboardings.png";
 
 const mensajeDelError = (error: unknown) => {
   const codigo = error instanceof ErrorEntrada ? error.codigo : null;
@@ -36,6 +37,7 @@ export default function Entrada() {
   return (
     <div className="entrada" data-modo={modo}>
       <form className="entrada-tarjeta" onSubmit={enviar}>
+        <img className="entrada-logo" src={logoIboardings} alt="iboardings" />
         <h1>Panel CBC</h1>
         <p className="entrada-suave">Administración · CBC</p>
         <label>

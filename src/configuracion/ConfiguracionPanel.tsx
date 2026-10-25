@@ -16,6 +16,8 @@ import {
 } from "./PlantillaCampo";
 import { construirUiSchema } from "./construirUiSchema";
 import SelectSiNo from "./SelectSiNo";
+import BuscadorCampos from "./BuscadorCampos";
+import { palabrasDe, type ResultadoBusqueda } from "./indiceDeCampos";
 import { soloLoCambiado } from "./soloLoCambiado";
 import { conValoresDeReferencia } from "./conValoresDeReferencia";
 import { URL_BASE } from "../providers/urlBase";
@@ -171,6 +173,11 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
   // el modo claro u oscuro que se elige en la cabecera de react-admin: los
   // colores del panel salen de el (ver index.css)
   const [modo] = useTheme();
+  // lo escrito en el buscador, mientras busca el menu enseña los resultados en vez de las categorias
+  const [consulta, setConsulta] = useState("");
+  // el id de la casilla del campo elegido en el buscador, hasta la que se baja al abrir su modulo; un objeto nuevo en
+  // cada eleccion, asi elegir otra vez el mismo campo vuelve a bajar
+  const [campoBuscado, setCampoBuscado] = useState<{ id: string } | null>(null);
 
   // se cargan el schema (una vez, es el mismo para todos los clientes) y
   // la configuracion real de este cliente en paralelo, al entrar
@@ -193,6 +200,37 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
     }
     cargarTodo();
   }, [clienteId]);
+
+  // con el modulo ya dibujado se baja hasta el campo buscado y se marca un momento
+  useEffect(() => {
+    if (!campoBuscado) return;
+    const casilla = document.getElementById(campoBuscado.id);
+    const campo = casilla?.closest(".campo, .lista") ?? casilla;
+    if (!campo) return;
+    campo.scrollIntoView({ behavior: "smooth", block: "center" });
+    campo.classList.add("campo-buscado");
+    const quitar = setTimeout(() => campo.classList.remove("campo-buscado"), 2500);
+    return () => {
+      clearTimeout(quitar);
+      campo.classList.remove("campo-buscado");
+    };
+  }, [campoBuscado]);
+
+  function abrirModulo(modulo: ModuloPanel) {
+    setModuloActivo(modulo);
+    setDatosEnEdicion(leerValorEnRuta(configuracion, modulo));
+    setRestaurados(new Set());
+    setMensaje(null);
+  }
+
+  function abrirResultado({ categoria, modulo, campo }: ResultadoBusqueda) {
+    setCategoriaAbierta(categoria.id);
+    abrirModulo(modulo);
+    if (campo) setCampoBuscado({ id: `root_${campo.ruta.join("_")}` });
+    else refFormulario.current?.scrollTo({ top: 0 });
+  }
+
+  const buscando = palabrasDe(consulta).join("").length >= 2;
 
   async function guardarModulo() {
     if (!moduloActivo || !esquemaModulo) return;
@@ -296,7 +334,15 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
       {/* menu lateral: categorias desplegables, cada una con sus modulos
           debajo. la del modulo que se edita queda marcada aunque se cierre */}
       <nav className="config-menu">
-        {categorias.map((categoria) => {
+        <BuscadorCampos
+          jsonSchema={jsonSchema}
+          categorias={categorias}
+          configuracion={configuracion}
+          consulta={consulta}
+          alCambiar={setConsulta}
+          alElegir={abrirResultado}
+        />
+        {!buscando && categorias.map((categoria) => {
           const abierta = categoriaAbierta === categoria.id;
           const actual = categoria.modulos.some((modulo) => modulo.id === moduloActivo?.id);
           return (
@@ -318,10 +364,7 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
                         type="button"
                         className={`config-modulo ${moduloActivo?.id === modulo.id ? "config-modulo-activo" : ""}`}
                         onClick={() => {
-                          setModuloActivo(modulo);
-                          setDatosEnEdicion(leerValorEnRuta(configuracion, modulo));
-                          setRestaurados(new Set());
-                          setMensaje(null);
+                          abrirModulo(modulo);
                           if (window.matchMedia("(max-width: 899px)").matches) {
                             requestAnimationFrame(() => refFormulario.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
                           }
@@ -365,7 +408,9 @@ export default function ConfiguracionPanel({ clienteId }: Props) {
             )}
             {/* tagName div: react-admin ya envuelve la pestaña en su <form> y no se pueden anidar, y onChange en vez de onSubmit
             porque un boton de enviar aqui dispararia el form de react-admin, el guardado va con el boton de abajo */}
+            {/* uno nuevo por modulo, asi sale ya dibujado al abrirlo y el buscador encuentra su campo */}
             <Form
+              key={moduloActivo.id}
               tagName="div"
               schema={esquemaModulo}
               uiSchema={uiSchema}

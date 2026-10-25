@@ -6,6 +6,7 @@ import { authProvider } from "./providers/authProvider";
 import { dataProvider } from "./providers/dataProvider";
 import { i18nProvider } from "./providers/i18nProvider";
 import Entrada from "./Entrada";
+import { DisposicionPanel } from "./BarraPanel";
 import { ClienteList, ClienteEdit, ClienteCreate } from "./clientes/ClientePanel";
 import { UserList, UserEdit, UserCreate } from "./users/UserPanel";
 import {
@@ -22,6 +23,7 @@ export default function App() {
       dataProvider={dataProvider}
       i18nProvider={i18nProvider}
       loginPage={Entrada}
+      layout={DisposicionPanel}
       title="Panel CBC"
       disableTelemetry
     >

@@ -1,18 +1,42 @@
-// login del panel contra /user (login, logout y profile) con la cookie httpOnly del backend, sin guardar
+// login del panel contra /user (login, logout y sesion) con la cookie httpOnly del backend, sin guardar
 // ningun token en el navegador, solo deja entrar al superadmin
 
 import type { AuthProvider } from "react-admin";
 import { URL_BASE } from "./urlBase";
 
-// /user/profile devuelve el usuario tal cual, el login lo envuelve en user
-async function leerPerfil(): Promise<{ id: number; nombre: string; rol: string } | null> {
-  const respuesta = await fetch(`${URL_BASE}/user/profile`, { credentials: "include" });
-  if (!respuesta.ok) return null;
-  return respuesta.json();
+interface Perfil {
+  id: number;
+  nombre: string;
+  rol: string;
 }
+
+// react-admin comprueba la sesion en cada cambio de pagina y cada vez que la pestaña vuelve a estar visible, asi que la
+// respuesta vale un minuto y las comprobaciones que coinciden comparten la peticion; una sesion que caduca entre medias
+// la descubre igual la siguiente peticion de datos (checkError)
+const VIGENCIA_MS = 60 * 1000;
+let perfilVigente: { promesa: Promise<Perfil | null>; hasta: number } | null = null;
+
+// /user/sesion trae solo id, nombre y rol, /user/profile trae ademas toda la configuracion del cliente
+function leerPerfil(): Promise<Perfil | null> {
+  if (perfilVigente && Date.now() < perfilVigente.hasta) return perfilVigente.promesa;
+  const promesa = fetch(`${URL_BASE}/user/sesion`, { credentials: "include" })
+    .then((respuesta) => (respuesta.ok ? (respuesta.json() as Promise<Perfil>) : null))
+    .catch((error) => {
+      // un fallo de red no se guarda, la siguiente comprobacion vuelve a preguntar
+      perfilVigente = null;
+      throw error;
+    });
+  perfilVigente = { promesa, hasta: Date.now() + VIGENCIA_MS };
+  return promesa;
+}
+
+const olvidarPerfil = () => {
+  perfilVigente = null;
+};
 
 async function cerrarSesion(): Promise<void> {
   await fetch(`${URL_BASE}/user/logout`, { method: "POST", credentials: "include" });
+  olvidarPerfil();
 }
 
 // error al entrar con el codigo del servidor (401, 403, 429...) o "rol" si el usuario no es superadmin, la entrada elige
@@ -37,6 +61,7 @@ export const authProvider: AuthProvider = {
     if (!respuesta.ok) {
       throw new ErrorEntrada(respuesta.status);
     }
+    olvidarPerfil();
 
     const datos = await respuesta.json();
 
@@ -65,6 +90,7 @@ export const authProvider: AuthProvider = {
   checkError: async (error) => {
     const status = error?.status;
     if (status === 401 || status === 403) {
+      olvidarPerfil();
       throw new Error("sesion no valida");
     }
     // cualquier otro error (500, de red...) no cierra la sesion sola
