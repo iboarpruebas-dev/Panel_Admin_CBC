@@ -1,4 +1,5 @@
-// panel de administracion (react-admin) con las pantallas de clientes y usuarios, solo para el superadmin
+// panel de administracion (react-admin) con las pantallas de clientes, usuarios y usuarios de la pagina de mantenimiento,
+// solo para el superadmin
 
 import { Admin, Resource } from "react-admin";
 import { authProvider } from "./providers/authProvider";
@@ -7,6 +8,11 @@ import { i18nProvider } from "./providers/i18nProvider";
 import Entrada from "./Entrada";
 import { ClienteList, ClienteEdit, ClienteCreate } from "./clientes/ClientePanel";
 import { UserList, UserEdit, UserCreate } from "./users/UserPanel";
+import {
+  UsuarioMantenimientoList,
+  UsuarioMantenimientoEdit,
+  UsuarioMantenimientoCreate,
+} from "./usuariosMantenimiento/UsuarioMantenimientoPanel";
 
 export default function App() {
   return (
@@ -31,6 +37,14 @@ export default function App() {
         list={UserList}
         edit={UserEdit}
         create={UserCreate}
+        recordRepresentation="nombre"
+      />
+      <Resource
+        name="usuarios-mantenimiento"
+        list={UsuarioMantenimientoList}
+        edit={UsuarioMantenimientoEdit}
+        create={UsuarioMantenimientoCreate}
+        options={{ label: "Usuarios de mantenimiento" }}
         recordRepresentation="nombre"
       />
     </Admin>
