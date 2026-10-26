@@ -214,6 +214,15 @@ export const textosEspanol: TranslationMessages = {
       },
     },
   },
+  // usuarios del panel y de mantenimiento: borrar los desactiva (ver BotonesDesactivar.tsx)
+  desactivar: {
+    boton: "Desactivar",
+    titulo: "Desactivar %{name} %{recordRepresentation}",
+    contenido: "No podrá entrar hasta que lo vuelvas a activar en su ficha.",
+    titulo_bloque: "Desactivar %{name} |||| Desactivar %{smart_count} %{name}",
+    contenido_bloque: "No podrá entrar hasta que lo vuelvas a activar en su ficha. |||| No podrán entrar hasta que los vuelvas a activar en su ficha.",
+    hecho: "Usuario desactivado |||| %{smart_count} usuarios desactivados",
+  },
   resources: {
     clientes: { name: "Cliente |||| Clientes" },
     users: { name: "Usuario |||| Usuarios" },

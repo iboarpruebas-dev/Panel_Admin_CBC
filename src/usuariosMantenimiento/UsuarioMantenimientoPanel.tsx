@@ -12,14 +12,15 @@ import {
   TextInput,
   PasswordInput,
   BooleanInput,
-  BulkDeleteButton,
   required,
 } from "react-admin";
+import { BarraFichaUsuario, DesactivarEnBloque } from "../BotonesDesactivar";
+import { Paginacion } from "../Paginacion";
 
 export const UsuarioMantenimientoList = () => (
-  <List>
+  <List pagination={<Paginacion />}>
     {/* desactivar en bloque pregunta antes y espera a que el servidor conteste */}
-    <Datagrid rowClick="edit" bulkActionButtons={<BulkDeleteButton mutationMode="pessimistic" />}>
+    <Datagrid rowClick="edit" bulkActionButtons={<DesactivarEnBloque />}>
       <TextField source="id" />
       <TextField source="nombre" />
       <BooleanField source="activo" />
@@ -30,7 +31,7 @@ export const UsuarioMantenimientoList = () => (
 // guardar y desactivar esperan a que el servidor conteste, si da error se queda en la ficha con lo escrito
 export const UsuarioMantenimientoEdit = () => (
   <Edit mutationMode="pessimistic">
-    <SimpleForm>
+    <SimpleForm toolbar={<BarraFichaUsuario />}>
       <TextField source="id" />
       <TextInput source="nombre" validate={required()} />
       {/* en blanco no se toca la contraseña actual, solo cambia si se escribe una nueva */}

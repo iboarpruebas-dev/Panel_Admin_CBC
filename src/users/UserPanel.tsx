@@ -16,9 +16,10 @@ import {
   BooleanInput,
   ReferenceInput,
   AutocompleteInput,
-  BulkDeleteButton,
   required,
 } from "react-admin";
+import { BarraFichaUsuario, DesactivarEnBloque } from "../BotonesDesactivar";
+import { Paginacion } from "../Paginacion";
 
 const opcionesRol = [
   { id: "superadmin", name: "Superadmin" },
@@ -26,9 +27,9 @@ const opcionesRol = [
 ];
 
 export const UserList = () => (
-  <List>
+  <List pagination={<Paginacion />}>
     {/* desactivar en bloque pregunta antes y espera a que el servidor conteste, como el boton de la ficha */}
-    <Datagrid rowClick="edit" bulkActionButtons={<BulkDeleteButton mutationMode="pessimistic" />}>
+    <Datagrid rowClick="edit" bulkActionButtons={<DesactivarEnBloque />}>
       <TextField source="id" />
       <TextField source="nombre" />
       <SelectField source="rol" choices={opcionesRol} />
@@ -41,7 +42,7 @@ export const UserList = () => (
 // guardar y desactivar esperan a que el servidor conteste, si da error se queda en la ficha con lo escrito
 export const UserEdit = () => (
   <Edit mutationMode="pessimistic">
-    <SimpleForm>
+    <SimpleForm toolbar={<BarraFichaUsuario />}>
       <TextField source="id" />
       <TextInput source="nombre" validate={required()} />
       {/* si se deja en blanco, el backend no toca la contraseña actual,

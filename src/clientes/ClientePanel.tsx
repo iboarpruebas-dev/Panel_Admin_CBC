@@ -17,6 +17,7 @@ import {
   SaveButton,
   useLocation,
 } from "react-admin";
+import { Paginacion } from "../Paginacion";
 import ConfiguracionPanel from "../configuracion/ConfiguracionPanel";
 import EliminarClienteDefinitivo from "./EliminarClienteDefinitivo";
 
@@ -24,7 +25,7 @@ import EliminarClienteDefinitivo from "./EliminarClienteDefinitivo";
 // de verdad con sus usuarios y sus informes
 
 export const ClienteList = () => (
-  <List>
+  <List pagination={<Paginacion />}>
     {/* sin casillas ni borrado en bloque: solo se elimina desde la ficha,
     con su aviso y la contraseña */}
     <Datagrid rowClick="edit" bulkActionButtons={false}>
