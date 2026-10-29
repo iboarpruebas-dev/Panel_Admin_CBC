@@ -41,7 +41,8 @@ export const ClienteList = () => (
 const PestanaConfiguracion = () => {
   const record = useRecordContext();
   if (!record) return null;
-  return <ConfiguracionPanel clienteId={record.id} />;
+  // con key se monta de cero al pasar a otro cliente, sin el modulo abierto ni la busqueda del anterior
+  return <ConfiguracionPanel key={record.id} clienteId={record.id} />;
 };
 
 // guardar y eliminar son de los datos generales, en la pestaña de configuracion cada modulo tiene su guardar
