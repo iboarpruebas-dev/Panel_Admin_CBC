@@ -39,7 +39,7 @@ export default function App() {
         list={UserList}
         edit={UserEdit}
         create={UserCreate}
-        recordRepresentation="nombre"
+        recordRepresentation="email"
       />
       <Resource
         name="usuarios-mantenimiento"

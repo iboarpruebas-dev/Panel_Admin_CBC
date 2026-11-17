@@ -534,7 +534,25 @@ body {
 }
 
 .entrada-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: var(--entrada-error);
+}
+
+/* usar otro correo y reenviar el codigo, debajo de entrar */
+.entrada-enlaces {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.entrada-tarjeta button.entrada-enlace {
+  padding: 2px 0;
+  border: none;
+  background: transparent;
+  color: var(--entrada-acento);
+  font-size: 13px;
 }
 
 .entrada-tarjeta label {

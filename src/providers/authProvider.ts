@@ -1,13 +1,13 @@
-// login del panel contra /user (login, logout y sesion) con la cookie httpOnly del backend, sin guardar
-// ningun token en el navegador, solo deja entrar al superadmin
+// entrada al panel con la de la aplicacion (/user/codigo, /user/entrar, /user/logout, /user/sesion) y su cookie httpOnly,
+// sin guardar ningun token
 
 import type { AuthProvider } from "react-admin";
 import { URL_BASE } from "./urlBase";
 
 interface Perfil {
   id: number;
-  nombre: string;
-  rol: string;
+  email: string;
+  rol: "superadmin" | "admin";
 }
 
 // react-admin comprueba la sesion en cada cambio de pagina y cada vez que la pestaña vuelve a estar visible, asi que la
@@ -16,7 +16,7 @@ interface Perfil {
 const VIGENCIA_MS = 60 * 1000;
 let perfilVigente: { promesa: Promise<Perfil | null>; hasta: number } | null = null;
 
-// /user/sesion trae solo id, nombre y rol, /user/profile trae ademas toda la configuracion del cliente
+// /user/sesion trae solo id, correo y rol, /user/profile trae ademas toda la configuracion del cliente
 function leerPerfil(): Promise<Perfil | null> {
   if (perfilVigente && Date.now() < perfilVigente.hasta) return perfilVigente.promesa;
   const promesa = fetch(`${URL_BASE}/user/sesion`, { credentials: "include" })
@@ -39,8 +39,8 @@ async function cerrarSesion(): Promise<void> {
   olvidarPerfil();
 }
 
-// error al entrar con el codigo del servidor (401, 403, 429...) o "rol" si el usuario no es superadmin, la entrada elige
-// el mensaje con el
+// error al pedir el codigo o al entrar con el estado del servidor (400, 401, 429...) o "rol" si el usuario no es
+// superadmin, la entrada elige el mensaje con el
 export class ErrorEntrada extends Error {
   codigo: number | "rol";
   constructor(codigo: number | "rol") {
@@ -49,31 +49,43 @@ export class ErrorEntrada extends Error {
   }
 }
 
+// el servidor contesta lo mismo este o no dado de alta el correo, el codigo llega en español
+export async function pedirCodigo(email: string): Promise<void> {
+  const respuesta = await fetch(`${URL_BASE}/user/codigo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ email, idioma: "es" }),
+  });
+  if (!respuesta.ok) {
+    throw new ErrorEntrada(respuesta.status);
+  }
+}
+
 export const authProvider: AuthProvider = {
-  login: async ({ username, password }) => {
-    const respuesta = await fetch(`${URL_BASE}/user/login`, {
+  login: async ({ email, codigo }) => {
+    const respuesta = await fetch(`${URL_BASE}/user/entrar`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include", // imprescindible para que la cookie se guarde
-      body: JSON.stringify({ nombre: username, clave: password }),
+      credentials: "include", // para que se guarde la cookie
+      body: JSON.stringify({ email, codigo }),
     });
 
     if (!respuesta.ok) {
       throw new ErrorEntrada(respuesta.status);
     }
+
+    // lo guardado era de antes de entrar; el panel es solo para superadmin, pero a otro usuario no se le cierra la sesion
+    // (salir se la cerraria tambien en la aplicacion, en todos sus equipos) y checkAuth no le deja pasar de la entrada
     olvidarPerfil();
-
-    const datos = await respuesta.json();
-
-    // el panel es solo para el superadmin, otro rol se rechaza aqui mismo y se cierra su sesion
-    if (datos.user?.rol !== "superadmin") {
-      await cerrarSesion();
+    const datos = (await respuesta.json().catch(() => null)) as { user?: { rol?: string } } | null;
+    if (datos?.user?.rol !== "superadmin") {
       throw new ErrorEntrada("rol");
     }
   },
 
-  // la cookie es la misma que la del front: solo se cierra si es del superadmin, a un cliente se le manda
-  // al login del panel sin sacarle del front
+  // la cookie es la misma que la de la aplicacion: solo se cierra si es de un superadmin, a un cliente se le manda al login
+  // del panel sin sacarle de la aplicacion
   logout: async () => {
     const perfil = await leerPerfil();
     if (perfil?.rol === "superadmin") await cerrarSesion();
@@ -101,7 +113,7 @@ export const authProvider: AuthProvider = {
     if (!perfil) {
       throw new Error("no se pudo obtener el perfil");
     }
-    return { id: perfil.id, fullName: perfil.nombre };
+    return { id: perfil.id, fullName: perfil.email };
   },
 
   getPermissions: async () => {

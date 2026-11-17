@@ -1,6 +1,7 @@
 // usuarios del panel y de mantenimiento: su DELETE no borra, los desactiva (se vuelven a activar en su ficha), asi que
 // el boton, la pregunta y el aviso dicen desactivar; los dos esperan al servidor y preguntan antes
 
+import type { ReactNode } from "react";
 import { BulkDeleteButton, DeleteButton, SaveButton, Toolbar } from "react-admin";
 
 // user-x de lucide, dibujado como los iconos de la barra
@@ -24,17 +25,21 @@ export const DesactivarEnBloque = () => (
   />
 );
 
-// barra de la ficha: guardar a la izquierda y desactivar a la derecha, como la de serie
-export const BarraFichaUsuario = () => (
+// barra de la ficha: guardar a la izquierda y desactivar a la derecha, como la de serie, con los botones que se le pasen
+// delante de desactivar
+export const BarraFichaUsuario = ({ children }: { children?: ReactNode }) => (
   <Toolbar sx={{ justifyContent: "space-between" }}>
     <SaveButton />
-    <DeleteButton
-      mutationMode="pessimistic"
-      label="desactivar.boton"
-      icon={<IconoDesactivar />}
-      confirmTitle="desactivar.titulo"
-      confirmContent="desactivar.contenido"
-      successMessage="desactivar.hecho"
-    />
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {children}
+      <DeleteButton
+        mutationMode="pessimistic"
+        label="desactivar.boton"
+        icon={<IconoDesactivar />}
+        confirmTitle="desactivar.titulo"
+        confirmContent="desactivar.contenido"
+        successMessage="desactivar.hecho"
+      />
+    </div>
   </Toolbar>
 );

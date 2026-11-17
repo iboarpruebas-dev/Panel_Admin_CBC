@@ -1,4 +1,5 @@
-// pantallas de usuarios del panel: listado, edicion y alta, borrar desde el panel solo desactiva
+// pantallas de usuarios del panel: listado, edicion y alta, eliminar desactiva (activo=false); se entra con un codigo que
+// llega al correo, sin contraseña
 
 import {
   List,
@@ -11,15 +12,20 @@ import {
   Create,
   SimpleForm,
   TextInput,
-  PasswordInput,
   SelectInput,
   BooleanInput,
   ReferenceInput,
   AutocompleteInput,
   required,
+  email,
 } from "react-admin";
 import { BarraFichaUsuario, DesactivarEnBloque } from "../BotonesDesactivar";
 import { Paginacion } from "../Paginacion";
+import CerrarSesiones from "./CerrarSesiones";
+
+// un admin sin cliente no tendria acceso a nada y el backend no lo deja guardar, al superadmin se le quita el cliente si lo tiene
+const AYUDA_CLIENTE = "Obligatorio para un admin. El superadmin no tiene cliente";
+const validarCorreo = [required(), email("Escribe un correo válido")];
 
 const opcionesRol = [
   { id: "superadmin", name: "Superadmin" },
@@ -31,7 +37,7 @@ export const UserList = () => (
     {/* desactivar en bloque pregunta antes y espera a que el servidor conteste, como el boton de la ficha */}
     <Datagrid rowClick="edit" bulkActionButtons={<DesactivarEnBloque />}>
       <TextField source="id" />
-      <TextField source="nombre" />
+      <TextField source="email" label="Correo" />
       <SelectField source="rol" choices={opcionesRol} />
       <ReferenceField source="id_cliente" reference="clientes" label="Cliente" emptyText="(sin cliente)" />
       <BooleanField source="activo" />
@@ -42,18 +48,12 @@ export const UserList = () => (
 // guardar y desactivar esperan a que el servidor conteste, si da error se queda en la ficha con lo escrito
 export const UserEdit = () => (
   <Edit mutationMode="pessimistic">
-    <SimpleForm toolbar={<BarraFichaUsuario />}>
+    <SimpleForm toolbar={<BarraFichaUsuario><CerrarSesiones /></BarraFichaUsuario>}>
       <TextField source="id" />
-      <TextInput source="nombre" validate={required()} />
-      {/* si se deja en blanco, el backend no toca la contraseña actual,
-      solo la cambia si aqui se escribe una nueva */}
-      <PasswordInput
-        source="clave"
-        label="Nueva contraseña (dejar en blanco para no cambiarla)"
-      />
+      <TextInput source="email" label="Correo" type="email" validate={validarCorreo} helperText="Cambiarlo cierra sus sesiones abiertas" />
       <SelectInput source="rol" choices={opcionesRol} validate={required()} />
       <ReferenceInput source="id_cliente" reference="clientes">
-        <AutocompleteInput label="Cliente" optionText="nombre_cliente" />
+        <AutocompleteInput label="Cliente" optionText="nombre_cliente" helperText={AYUDA_CLIENTE} />
       </ReferenceInput>
       <BooleanInput source="activo" />
     </SimpleForm>
@@ -63,11 +63,10 @@ export const UserEdit = () => (
 export const UserCreate = () => (
   <Create>
     <SimpleForm>
-      <TextInput source="nombre" validate={required()} />
-      <PasswordInput source="clave" validate={required()} />
+      <TextInput source="email" label="Correo" type="email" validate={validarCorreo} />
       <SelectInput source="rol" choices={opcionesRol} defaultValue="admin" validate={required()} />
       <ReferenceInput source="id_cliente" reference="clientes">
-        <AutocompleteInput label="Cliente" optionText="nombre_cliente" />
+        <AutocompleteInput label="Cliente" optionText="nombre_cliente" helperText={AYUDA_CLIENTE} />
       </ReferenceInput>
     </SimpleForm>
   </Create>
